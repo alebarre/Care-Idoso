@@ -36,6 +36,7 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem(this.tokenKey);
     this.usuarioLogadoSubject.next(null);
+    window.location.href = '/login';
   }
 
   getToken(): string | null {

@@ -1,42 +1,41 @@
-<div class="login-container">
-  <p-card header="Care Idoso" subheader="Controle de rotinas">
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
-      <div class="field">
-        <label for="email">E-mail</label>
-        <input
-          id="email"
-          type="email"
-          pInputText
-          formControlName="email"
-          placeholder="seu@email.com"
-          class="full-width"
-        />
-      </div>
+<div class="login-screen">
+  <div class="login-header">
+    <div class="logo">Care Idoso</div>
+    <p class="login-subtitle">Controle de rotinas de cuidadoras</p>
+  </div>
 
-      <div class="field">
-        <label for="senha">Senha</label>
-        <p-password
-          id="senha"
-          formControlName="senha"
-          placeholder="Senha"
-          [toggleMask]="true"
-          [feedback]="false"
-          class="full-width"
-          styleClass="full-width"
-          inputStyleClass="full-width"
-        ></p-password>
-      </div>
+  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+    <div class="uber-field">
+      <label for="email" class="uber-label">E-mail</label>
+      <input
+        id="email"
+        type="email"
+        class="uber-input"
+        formControlName="email"
+        placeholder="seu@email.com"
+      />
+    </div>
 
-      <p-button
-        type="submit"
-        label="Entrar"
-        class="full-width"
-        styleClass="full-width"
-        [loading]="carregando"
-        [disabled]="loginForm.invalid"
-      ></p-button>
-    </form>
-  </p-card>
+    <div class="uber-field">
+      <label for="senha" class="uber-label">Senha</label>
+      <input
+        id="senha"
+        type="password"
+        class="uber-input"
+        formControlName="senha"
+        placeholder="Digite sua senha"
+      />
+    </div>
+
+    <button
+      type="submit"
+      class="uber-button"
+      [disabled]="loginForm.invalid || carregando"
+    >
+      <span *ngIf="!carregando">Entrar</span>
+      <span *ngIf="carregando">Entrando...</span>
+    </button>
+  </form>
 </div>
 
 <p-toast></p-toast>

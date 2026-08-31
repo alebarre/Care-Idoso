@@ -1,44 +1,75 @@
-<div class="mobile-container">
-  <p-toolbar styleClass="mb-2">
-    <div class="p-toolbar-group-start">
-      <span class="font-bold text-xl">Care Idoso</span>
+<div class="dashboard-screen">
+  <header class="dashboard-header">
+    <div class="dashboard-title">
+      <h1 class="heading-md">Care Idoso</h1>
+      <p class="body-sm">Bem-vindo de volta</p>
     </div>
-    <div class="p-toolbar-group-end">
-      <p-button icon="pi pi-sign-out" label="Sair" (onClick)="logout()" size="small"></p-button>
+    <button class="icon-button" (click)="logout()" aria-label="Sair">
+      <fa-icon [icon]="['fas', 'sign-out-alt']"></fa-icon>
+    </button>
+  </header>
+
+  <section class="dashboard-section">
+    <h2 class="heading-md mb-md">Resumo do plantão</h2>
+
+    <div class="dashboard-grid">
+      <a class="dashboard-card" routerLink="/rotinas">
+        <div class="dashboard-card__icon">
+          <fa-icon [icon]="['fas', 'clipboard-list']"></fa-icon>
+        </div>
+        <div class="dashboard-card__content">
+          <span class="dashboard-card__title">Rotinas</span>
+          <span class="dashboard-card__subtitle">Medicações, medições e observações</span>
+        </div>
+        <fa-icon [icon]="['fas', 'chevron-right']" class="dashboard-card__arrow"></fa-icon>
+      </a>
+
+      <a class="dashboard-card" routerLink="/lembretes">
+        <div class="dashboard-card__icon">
+          <fa-icon [icon]="['fas', 'bell']"></fa-icon>
+        </div>
+        <div class="dashboard-card__content">
+          <span class="dashboard-card__title">Lembretes</span>
+          <span class="dashboard-card__subtitle">Horários de remédios</span>
+        </div>
+        <fa-icon [icon]="['fas', 'chevron-right']" class="dashboard-card__arrow"></fa-icon>
+      </a>
+
+      <a class="dashboard-card" routerLink="/medicamentos">
+        <div class="dashboard-card__icon">
+          <fa-icon [icon]="['fas', 'pills']"></fa-icon>
+        </div>
+        <div class="dashboard-card__content">
+          <span class="dashboard-card__title">Medicamentos</span>
+          <span class="dashboard-card__subtitle">Estoque e cadastro</span>
+        </div>
+        <fa-icon [icon]="['fas', 'chevron-right']" class="dashboard-card__arrow"></fa-icon>
+      </a>
+
+      <a class="dashboard-card" routerLink="/pedidos">
+        <div class="dashboard-card__icon">
+          <fa-icon [icon]="['fas', 'shopping-cart']"></fa-icon>
+        </div>
+        <div class="dashboard-card__content">
+          <span class="dashboard-card__title">Pedidos</span>
+          <span class="dashboard-card__subtitle">Produtos em falta</span>
+        </div>
+        <fa-icon [icon]="['fas', 'chevron-right']" class="dashboard-card__arrow"></fa-icon>
+      </a>
     </div>
-  </p-toolbar>
+  </section>
 
-  <h2>Resumo do plantão</h2>
-
-  <div class="grid">
-    <div class="col-12 sm:col-6">
-      <p-card header="Rotinas" styleClass="cursor-pointer" routerLink="/rotinas">
-        <p>Registrar medições, medicações e observações.</p>
-      </p-card>
-    </div>
-
-    <div class="col-12 sm:col-6">
-      <p-card header="Lembretes" styleClass="cursor-pointer" routerLink="/lembretes">
-        <p>Horários de remédios e próximos cuidados.</p>
-      </p-card>
-    </div>
-
-    <div class="col-12 sm:col-6">
-      <p-card header="Medicamentos" styleClass="cursor-pointer" routerLink="/medicamentos">
-        <p>Estoque e cadastro de medicamentos/produtos.</p>
-      </p-card>
-    </div>
-
-    <div class="col-12 sm:col-6">
-      <p-card header="Pedidos" styleClass="cursor-pointer" routerLink="/pedidos">
-        <p>Solicitar medicamentos ou produtos em falta.</p>
-      </p-card>
-    </div>
-  </div>
-
-  <div *ngIf="authService.isAdmin()" class="mt-2">
-    <p-card header="Administração" styleClass="cursor-pointer" routerLink="/usuarios">
-      <p>Gerenciar usuários e permissões.</p>
-    </p-card>
-  </div>
+  <section *ngIf="authService.isAdmin()" class="dashboard-section">
+    <h2 class="heading-md mb-md">Administração</h2>
+    <a class="dashboard-card" routerLink="/usuarios">
+      <div class="dashboard-card__icon">
+        <fa-icon [icon]="['fas', 'users']"></fa-icon>
+      </div>
+      <div class="dashboard-card__content">
+        <span class="dashboard-card__title">Usuários</span>
+        <span class="dashboard-card__subtitle">Gerenciar permissões</span>
+      </div>
+      <fa-icon [icon]="['fas', 'chevron-right']" class="dashboard-card__arrow"></fa-icon>
+    </a>
+  </section>
 </div>

@@ -1,12 +1,19 @@
-<div class="mobile-container">
-  <p-toolbar styleClass="mb-2">
-    <div class="p-toolbar-group-start">
-      <p-button icon="pi pi-arrow-left" routerLink="/" size="small" [text]="true"></p-button>
-      <span class="font-bold ml-2">Rotinas</span>
-    </div>
-  </p-toolbar>
+<div class="page-screen">
+  <header class="page-header">
+    <a routerLink="/" class="icon-button" aria-label="Voltar">
+      <fa-icon [icon]="['fas', 'arrow-left']"></fa-icon>
+    </a>
+    <h1 class="heading-md">Rotinas</h1>
+    <div class="icon-placeholder"></div>
+  </header>
 
-  <p-card header="Registrar rotina">
-    <p>Aqui serão registradas medicações, medições e observações.</p>
-  </p-card>
+  <section class="page-content">
+    <div class="uber-card uber-card--flat">
+      <div class="empty-state">
+        <fa-icon [icon]="['fas', 'clipboard-list']" class="empty-state__icon"></fa-icon>
+        <p class="body-md">Registrar rotinas.</p>
+        <p class="body-sm">Aqui serão registradas medicações, medições e observações.</p>
+      </div>
+    </div>
+  </section>
 </div>

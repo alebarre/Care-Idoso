@@ -1,6 +1,6 @@
 ---
 name: care-angular-rules
-description: Regras do frontend Angular do Care Idoso (NgModules, PrimeNG, FontAwesome, mobile-first).
+description: Regras do frontend Angular do Care Idoso (NgModules, PrimeNG, FontAwesome, mobile-first, design system Uber).
 globs:
   - "frontend/**/*.ts"
   - "frontend/**/*.html"
@@ -25,9 +25,13 @@ globs:
 
 ## UI
 
-- PrimeNG via módulos importados/exportados no `SharedModule`.
+- Design System global em `frontend/src/styles.scss` (tokens de cores, tipografia, espaçamento, botões, inputs, cards, listas).
 - FontAwesome via `FaIconLibrary` no `SharedModule`.
 - Layout mobile-first: `mobile-container`, cards empilhados, toolbar com botões claros.
+- Botão primário: `.uber-button` (fundo preto, texto branco, arredondado, 52px altura, full-width).
+- Campo de texto: `.uber-field` + `.uber-label` + `.uber-input` (fundo cinza, borda preta no foco, 52px altura).
+- Telas internas: `.page-screen` + `.page-header` com `.icon-button` de voltar, título centralizado, `.page-content`.
+- Estado vazio: `.empty-state` com ícone e duas linhas.
 - Toast e mensagens de erro centralizadas via `MessageService`.
 
 ## Requisições
