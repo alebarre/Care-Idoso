@@ -1,0 +1,44 @@
+<div class="mobile-container">
+  <p-toolbar styleClass="mb-2">
+    <div class="p-toolbar-group-start">
+      <span class="font-bold text-xl">Care Idoso</span>
+    </div>
+    <div class="p-toolbar-group-end">
+      <p-button icon="pi pi-sign-out" label="Sair" (onClick)="logout()" size="small"></p-button>
+    </div>
+  </p-toolbar>
+
+  <h2>Resumo do plantão</h2>
+
+  <div class="grid">
+    <div class="col-12 sm:col-6">
+      <p-card header="Rotinas" styleClass="cursor-pointer" routerLink="/rotinas">
+        <p>Registrar medições, medicações e observações.</p>
+      </p-card>
+    </div>
+
+    <div class="col-12 sm:col-6">
+      <p-card header="Lembretes" styleClass="cursor-pointer" routerLink="/lembretes">
+        <p>Horários de remédios e próximos cuidados.</p>
+      </p-card>
+    </div>
+
+    <div class="col-12 sm:col-6">
+      <p-card header="Medicamentos" styleClass="cursor-pointer" routerLink="/medicamentos">
+        <p>Estoque e cadastro de medicamentos/produtos.</p>
+      </p-card>
+    </div>
+
+    <div class="col-12 sm:col-6">
+      <p-card header="Pedidos" styleClass="cursor-pointer" routerLink="/pedidos">
+        <p>Solicitar medicamentos ou produtos em falta.</p>
+      </p-card>
+    </div>
+  </div>
+
+  <div *ngIf="authService.isAdmin()" class="mt-2">
+    <p-card header="Administração" styleClass="cursor-pointer" routerLink="/usuarios">
+      <p>Gerenciar usuários e permissões.</p>
+    </p-card>
+  </div>
+</div>
