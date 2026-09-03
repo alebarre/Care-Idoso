@@ -32,3 +32,24 @@
   gap: var(--space-lg);
   margin-bottom: var(--space-md);
 }
+
+.login-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.login-link {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--uber-black);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.login-link-separator {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}

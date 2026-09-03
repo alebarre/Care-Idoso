@@ -2,6 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { LoginRequest, LoginResponse } from '../models/login.model';
+import {
+  EsqueciSenhaRequest,
+  MensagemResponse,
+  NovaContaRequest,
+  RedefinirSenhaRequest,
+  ValidarCodigoGenericoRequest,
+  ValidarCodigoRequest
+} from '../models/esqueci-senha.model';
 
 interface JwtPayload {
   sub: string;
@@ -53,6 +61,26 @@ export class AuthService {
 
   isAdmin(): boolean {
     return this.getPerfil() === 'ADMIN';
+  }
+
+  esqueciSenha(request: EsqueciSenhaRequest): Observable<MensagemResponse> {
+    return this.http.post<MensagemResponse>(`${this.apiUrl}/esqueci-senha`, request);
+  }
+
+  validarCodigo(request: ValidarCodigoGenericoRequest): Observable<MensagemResponse> {
+    return this.http.post<MensagemResponse>(`${this.apiUrl}/validar-codigo`, request);
+  }
+
+  redefinirSenha(request: RedefinirSenhaRequest): Observable<MensagemResponse> {
+    return this.http.post<MensagemResponse>(`${this.apiUrl}/redefinir-senha`, request);
+  }
+
+  novaConta(request: NovaContaRequest): Observable<MensagemResponse> {
+    return this.http.post<MensagemResponse>(`${this.apiUrl}/nova-conta`, request);
+  }
+
+  validarCodigoNovaConta(request: ValidarCodigoRequest): Observable<MensagemResponse> {
+    return this.http.post<MensagemResponse>(`${this.apiUrl}/validar-codigo-nova-conta`, request);
   }
 
   private carregarUsuario(): LoginResponse | null {

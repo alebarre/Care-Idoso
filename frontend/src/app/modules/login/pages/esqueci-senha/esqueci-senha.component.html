@@ -1,0 +1,173 @@
+<div class="page-screen">
+  <header class="page-header">
+    <button
+      type="button"
+      class="icon-button"
+      aria-label="Voltar"
+      (click)="etapa === 'email' ? irParaLogin() : voltar()"
+    >
+      <fa-icon [icon]="['fas', 'arrow-left']"></fa-icon>
+    </button>
+    <h1 class="heading-md">Redefinir senha</h1>
+    <div class="icon-placeholder"></div>
+  </header>
+
+  <section class="page-content">
+    <!-- Etapa 1: E-mail -->
+    <form
+      *ngIf="etapa === 'email'"
+      [formGroup]="emailForm"
+      (ngSubmit)="enviarEmail()"
+      class="auth-form"
+    >
+      <p class="body-md auth-instructions">
+        Informe o e-mail cadastrado para receber um código de verificação.
+      </p>
+
+      <div class="uber-field">
+        <label for="email" class="uber-label">E-mail</label>
+        <input
+          id="email"
+          type="email"
+          class="uber-input"
+          formControlName="email"
+          placeholder="seu@email.com"
+        />
+        <p class="erro-campo" *ngIf="emailForm.get('email')?.invalid && emailForm.get('email')?.touched">
+          Informe um e-mail válido.
+        </p>
+      </div>
+
+      <button
+        type="submit"
+        class="uber-button mt-lg"
+        [disabled]="emailForm.invalid || carregando"
+      >
+        <span *ngIf="!carregando">Enviar código</span>
+        <span *ngIf="carregando">Enviando...</span>
+      </button>
+    </form>
+
+    <!-- Etapa 2: Código -->
+    <form
+      *ngIf="etapa === 'codigo'"
+      [formGroup]="codigoForm"
+      (ngSubmit)="validarCodigo()"
+      class="auth-form"
+    >
+      <p class="body-md auth-instructions">
+        Digite o código de 5 dígitos enviado para
+        <strong>{{ email }}</strong>.
+      </p>
+
+      <div class="uber-field">
+        <label for="codigo" class="uber-label">Código</label>
+        <input
+          id="codigo"
+          type="text"
+          class="uber-input uber-input--center"
+          formControlName="codigo"
+          placeholder="00000"
+          maxlength="5"
+          inputmode="numeric"
+        />
+        <p class="erro-campo" *ngIf="codigoForm.get('codigo')?.hasError('required') && codigoForm.get('codigo')?.touched">
+          Digite o código de 5 dígitos.
+        </p>
+        <p class="erro-campo" *ngIf="codigoForm.get('codigo')?.hasError('minlength') && codigoForm.get('codigo')?.touched">
+          O código deve ter 5 dígitos.
+        </p>
+        <p class="erro-campo" *ngIf="codigoForm.get('codigo')?.hasError('pattern') && codigoForm.get('codigo')?.touched">
+          O código deve conter apenas números.
+        </p>
+      </div>
+
+      <p class="body-sm timer">
+        <span *ngIf="tempoRestante > 0">Reenviar em {{ tempoRestante }}s</span>
+        <button
+          type="button"
+          class="link-button"
+          [disabled]="tempoRestante > 0 || carregando"
+          (click)="reenviarCodigo()"
+          *ngIf="tempoRestante === 0"
+        >
+          Reenviar código
+        </button>
+      </p>
+
+      <button
+        type="submit"
+        class="uber-button mt-lg"
+        [disabled]="codigoForm.invalid || carregando"
+      >
+        <span *ngIf="!carregando">Continuar</span>
+        <span *ngIf="carregando">Verificando...</span>
+      </button>
+    </form>
+
+    <!-- Etapa 3: Nova senha -->
+    <form
+      *ngIf="etapa === 'novaSenha'"
+      [formGroup]="senhaForm"
+      (ngSubmit)="redefinirSenha()"
+      class="auth-form"
+    >
+      <p class="body-md auth-instructions">
+        Crie uma nova senha com pelo menos 6 caracteres, incluindo letras e números.
+      </p>
+
+      <div class="uber-field">
+        <label for="novaSenha" class="uber-label">Nova senha</label>
+        <input
+          id="novaSenha"
+          type="password"
+          class="uber-input"
+          formControlName="novaSenha"
+          placeholder="Digite a nova senha"
+        />
+        <p class="erro-campo" *ngIf="senhaForm.get('novaSenha')?.invalid && senhaForm.get('novaSenha')?.touched">
+          A senha deve ter pelo menos 6 caracteres, incluindo letras e números.
+        </p>
+      </div>
+
+      <div class="uber-field">
+        <label for="confirmarSenha" class="uber-label">Confirmar senha</label>
+        <input
+          id="confirmarSenha"
+          type="password"
+          class="uber-input"
+          formControlName="confirmarSenha"
+          placeholder="Confirme a nova senha"
+        />
+        <p class="erro-campo" *ngIf="senhaForm.get('confirmarSenha')?.invalid && senhaForm.get('confirmarSenha')?.touched">
+          Confirme a senha.
+        </p>
+      </div>
+
+      <p class="body-sm erro-validacao" *ngIf="senhaForm.hasError('senhasDiferentes') && senhaForm.get('confirmarSenha')?.touched">
+        As senhas não conferem.
+      </p>
+
+      <button
+        type="submit"
+        class="uber-button mt-lg"
+        [disabled]="senhaForm.invalid || carregando"
+      >
+        <span *ngIf="!carregando">Redefinir senha</span>
+        <span *ngIf="carregando">Salvando...</span>
+      </button>
+    </form>
+
+    <!-- Etapa 4: Sucesso -->
+    <div *ngIf="etapa === 'sucesso'" class="empty-state">
+      <fa-icon [icon]="['fas', 'circle-check']" class="empty-state__icon"></fa-icon>
+      <p class="body-md">Senha redefinida com sucesso!</p>
+      <p class="body-sm">Agora você pode fazer login com a nova senha.</p>
+      <button type="button" class="uber-button mt-lg" (click)="irParaLogin()">
+        Ir para o login
+      </button>
+    </div>
+  </section>
+</div>
+
+<p-toast></p-toast>

@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -26,7 +27,8 @@ public class GlobalExceptionHandler {
             erros.put(campo, mensagem);
         });
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(corpoErro("Erro de validação", erros));
+        String mensagemPrincipal = erros.getOrDefault("codigo", "Erro de validação");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(corpoErro(mensagemPrincipal, erros));
     }
 
     @ExceptionHandler(BadCredentialsException.class)
@@ -34,9 +36,19 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(corpoErro(ex.getMessage(), null));
     }
 
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleUsernameNotFound(UsernameNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(corpoErro(ex.getMessage(), null));
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(corpoErro(ex.getMessage(), null));
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException ex) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(corpoErro(ex.getMessage(), null));
     }
 
     @ExceptionHandler(Exception.class)

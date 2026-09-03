@@ -1,0 +1,5 @@
+ALTER TABLE codigos_verificacao
+    ALTER COLUMN expiracao TYPE TIMESTAMPTZ USING expiracao AT TIME ZONE 'UTC',
+    ALTER COLUMN expiracao SET NOT NULL,
+    ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC',
+    ALTER COLUMN created_at SET NOT NULL;

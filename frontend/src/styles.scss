@@ -331,3 +331,59 @@ button {
   color: var(--text-muted);
   margin-bottom: var(--space-md);
 }
+
+/* Fluxos de autenticação (esqueci senha / nova conta) */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.auth-instructions {
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.uber-input--center {
+  text-align: center;
+  letter-spacing: 0.5rem;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+}
+
+.timer {
+  text-align: center;
+  color: var(--text-muted);
+  min-height: 1.5rem;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--uber-black);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.link-button:disabled {
+  color: var(--text-muted);
+  text-decoration: none;
+  cursor: not-allowed;
+}
+
+.erro-validacao {
+  color: var(--danger-color);
+  text-align: center;
+}
+
+.erro-campo {
+  margin: var(--space-xs) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--danger-color);
+  line-height: 1.4;
+}
