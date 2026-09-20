@@ -4,10 +4,12 @@ import com.careidoso.dto.request.EsqueciSenhaRequest;
 import com.careidoso.dto.request.LoginRequest;
 import com.careidoso.dto.request.NovaContaRequest;
 import com.careidoso.dto.request.RedefinirSenhaRequest;
+import com.careidoso.dto.request.RefreshTokenRequest;
 import com.careidoso.dto.request.ValidarCodigoGenericoRequest;
 import com.careidoso.dto.request.ValidarCodigoRequest;
 import com.careidoso.dto.response.LoginResponse;
 import com.careidoso.dto.response.MensagemResponse;
+import com.careidoso.dto.response.RefreshTokenResponse;
 import com.careidoso.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,17 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<RefreshTokenResponse> refresh(@RequestBody @Valid RefreshTokenRequest request) {
+        return ResponseEntity.ok(authService.refresh(request.refreshToken()));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<MensagemResponse> logout(@RequestBody @Valid RefreshTokenRequest request) {
+        authService.logout(request.refreshToken());
+        return ResponseEntity.ok(new MensagemResponse("Logout realizado com sucesso."));
     }
 
     @PostMapping("/esqueci-senha")

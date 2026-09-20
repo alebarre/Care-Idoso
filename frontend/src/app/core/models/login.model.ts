@@ -4,9 +4,16 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  token: string;
+  accessToken: string;
+  refreshToken: string;
   tipo: string;
   usuarioId: number;
   nome: string;
   perfil: 'ADMIN' | 'CUIDADORA';
+}
+
+export interface RefreshTokenResponse {
+  accessToken: string;
+  refreshToken: string;
+  tipo: string;
 }

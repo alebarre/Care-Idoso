@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
-import { LoginRequest, LoginResponse } from '../models/login.model';
+import { LoginRequest, LoginResponse, RefreshTokenResponse } from '../models/login.model';
 import {
   EsqueciSenhaRequest,
   MensagemResponse,
@@ -25,6 +25,7 @@ interface JwtPayload {
 export class AuthService {
   private readonly apiUrl = '/api/auth';
   private readonly tokenKey = 'care_idoso_token';
+  private readonly refreshTokenKey = 'care_idoso_refresh_token';
 
   private usuarioLogadoSubject = new BehaviorSubject<LoginResponse | null>(this.carregarUsuario());
   usuarioLogado$ = this.usuarioLogadoSubject.asObservable();
@@ -35,14 +36,33 @@ export class AuthService {
     const request: LoginRequest = { email, senha };
     return this.http.post<LoginResponse>(`${this.apiUrl}/login`, request).pipe(
       tap(response => {
-        localStorage.setItem(this.tokenKey, response.token);
+        localStorage.setItem(this.tokenKey, response.accessToken);
+        localStorage.setItem(this.refreshTokenKey, response.refreshToken);
         this.usuarioLogadoSubject.next(response);
       })
     );
   }
 
+  refreshAccessToken(): Observable<RefreshTokenResponse> {
+    const refreshToken = this.getRefreshToken();
+    return this.http.post<RefreshTokenResponse>(`${this.apiUrl}/refresh`, { refreshToken }).pipe(
+      tap(response => {
+        localStorage.setItem(this.tokenKey, response.accessToken);
+        localStorage.setItem(this.refreshTokenKey, response.refreshToken);
+      })
+    );
+  }
+
   logout(): void {
+    const refreshToken = this.getRefreshToken();
+    if (refreshToken) {
+      this.http.post(`${this.apiUrl}/logout`, { refreshToken }).subscribe({
+        error: () => { /* logout local prossegue mesmo se a revogação falhar */ }
+      });
+    }
+
     localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.refreshTokenKey);
     this.usuarioLogadoSubject.next(null);
     window.location.href = '/login';
   }
@@ -51,8 +71,12 @@ export class AuthService {
     return localStorage.getItem(this.tokenKey);
   }
 
+  getRefreshToken(): string | null {
+    return localStorage.getItem(this.refreshTokenKey);
+  }
+
   estaLogado(): boolean {
-    return !!this.getToken();
+    return !!this.getToken() || !!this.getRefreshToken();
   }
 
   getPerfil(): string | null {
@@ -91,7 +115,8 @@ export class AuthService {
 
     const payload = this.decodificarToken(token);
     return {
-      token,
+      accessToken: token,
+      refreshToken: this.getRefreshToken() ?? '',
       tipo: 'Bearer',
       usuarioId: payload?.id ?? 0,
       nome: payload?.nome ?? '',

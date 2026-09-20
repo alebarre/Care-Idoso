@@ -1,7 +1,8 @@
 package com.careidoso.dto.response;
 
 public record LoginResponse(
-        String token,
+        String accessToken,
+        String refreshToken,
         String tipo,
         Long usuarioId,
         String nome,

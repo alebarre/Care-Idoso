@@ -16,17 +16,17 @@ import java.util.function.Function;
 public class JwtService {
 
     private final SecretKey secretKey;
-    private final long expirationMs;
+    private final long accessExpirationMs;
 
     public JwtService(@Value("${careidoso.jwt.secret}") String secret,
-                      @Value("${careidoso.jwt.expiration-ms}") long expirationMs) {
+                      @Value("${careidoso.jwt.access-expiration-ms}") long accessExpirationMs) {
         this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
-        this.expirationMs = expirationMs;
+        this.accessExpirationMs = accessExpirationMs;
     }
 
-    public String gerarToken(UserDetailsImpl userDetails) {
+    public String gerarAccessToken(UserDetailsImpl userDetails) {
         Date agora = new Date();
-        Date expiracao = new Date(agora.getTime() + expirationMs);
+        Date expiracao = new Date(agora.getTime() + accessExpirationMs);
 
         return Jwts.builder()
                 .subject(userDetails.getUsername())

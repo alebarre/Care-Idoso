@@ -4,6 +4,7 @@ import com.careidoso.dto.request.LoginRequest;
 import com.careidoso.dto.request.NovaContaRequest;
 import com.careidoso.dto.request.RedefinirSenhaRequest;
 import com.careidoso.dto.response.LoginResponse;
+import com.careidoso.dto.response.RefreshTokenResponse;
 import com.careidoso.model.Perfil;
 import com.careidoso.model.TipoCodigoVerificacao;
 import com.careidoso.model.Usuario;
@@ -23,12 +24,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
     private final AuthenticationManager authenticationManager;
-    private final UsuarioService usuarioService;
     private final JwtService jwtService;
     private final CodigoVerificacaoService codigoVerificacaoService;
+    private final RefreshTokenService refreshTokenService;
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Transactional
     public LoginResponse login(LoginRequest request) {
         try {
             authenticationManager.authenticate(
@@ -38,16 +40,35 @@ public class AuthService {
             throw new BadCredentialsException("E-mail ou senha inválidos.");
         }
 
-        UserDetailsImpl userDetails = usuarioService.carregarUserDetails(request.email());
-        String token = jwtService.gerarToken(userDetails);
+        Usuario usuario = usuarioRepository.findByEmail(request.email())
+                .orElseThrow(() -> new BadCredentialsException("E-mail ou senha inválidos."));
+        UserDetailsImpl userDetails = new UserDetailsImpl(usuario);
+
+        String accessToken = jwtService.gerarAccessToken(userDetails);
+        String refreshToken = refreshTokenService.gerar(usuario);
 
         return new LoginResponse(
-                token,
+                accessToken,
+                refreshToken,
                 "Bearer",
                 userDetails.getId(),
                 userDetails.getNome(),
                 userDetails.getPerfil().name()
         );
+    }
+
+    @Transactional
+    public RefreshTokenResponse refresh(String refreshTokenBruto) {
+        RefreshTokenService.ResultadoRenovacao resultado = refreshTokenService.renovar(refreshTokenBruto);
+        UserDetailsImpl userDetails = new UserDetailsImpl(resultado.usuario());
+        String novoAccessToken = jwtService.gerarAccessToken(userDetails);
+
+        return new RefreshTokenResponse(novoAccessToken, resultado.novoRefreshToken(), "Bearer");
+    }
+
+    @Transactional
+    public void logout(String refreshTokenBruto) {
+        refreshTokenService.revogar(refreshTokenBruto);
     }
 
     @Transactional
@@ -73,6 +94,7 @@ public class AuthService {
 
         usuario.setSenha(passwordEncoder.encode(request.novaSenha()));
         usuarioRepository.save(usuario);
+        refreshTokenService.revogarTodosDoUsuario(usuario.getId());
     }
 
     @Transactional
