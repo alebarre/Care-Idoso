@@ -7,6 +7,26 @@
   background-color: var(--uber-white);
 }
 
+@media (min-width: 480px) {
+  .login-screen {
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-2xl);
+  }
+
+  .login-header,
+  .login-form,
+  .login-links {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .login-header {
+    margin-top: 0;
+    text-align: center;
+  }
+}
+
 .login-header {
   margin-top: var(--space-2xl);
   text-align: left;

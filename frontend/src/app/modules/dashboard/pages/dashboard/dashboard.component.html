@@ -61,15 +61,17 @@
 
   <section *ngIf="authService.isAdmin()" class="dashboard-section">
     <h2 class="heading-md mb-md">Administração</h2>
-    <a class="dashboard-card" routerLink="/usuarios">
-      <div class="dashboard-card__icon">
-        <fa-icon [icon]="['fas', 'users']"></fa-icon>
-      </div>
-      <div class="dashboard-card__content">
-        <span class="dashboard-card__title">Usuários</span>
-        <span class="dashboard-card__subtitle">Gerenciar permissões</span>
-      </div>
-      <fa-icon [icon]="['fas', 'chevron-right']" class="dashboard-card__arrow"></fa-icon>
-    </a>
+    <div class="dashboard-grid">
+      <a class="dashboard-card" routerLink="/usuarios">
+        <div class="dashboard-card__icon">
+          <fa-icon [icon]="['fas', 'users']"></fa-icon>
+        </div>
+        <div class="dashboard-card__content">
+          <span class="dashboard-card__title">Usuários</span>
+          <span class="dashboard-card__subtitle">Gerenciar permissões</span>
+        </div>
+        <fa-icon [icon]="['fas', 'chevron-right']" class="dashboard-card__arrow"></fa-icon>
+      </a>
+    </div>
   </section>
 </div>
