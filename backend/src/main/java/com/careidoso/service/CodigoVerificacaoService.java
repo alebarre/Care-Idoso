@@ -3,6 +3,7 @@ package com.careidoso.service;
 import com.careidoso.model.CodigoVerificacao;
 import com.careidoso.model.TipoCodigoVerificacao;
 import com.careidoso.repository.CodigoVerificacaoRepository;
+import com.careidoso.util.LogSanitizer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,7 +35,7 @@ public class CodigoVerificacaoService {
         if (codigoRepository.existsByEmailAndTipoAndUtilizadoFalseAndCreatedAtAfter(email, tipo, limiteCooldown)) {
             long segundosRestantes = tempoRestanteCooldown(email, tipo, agora);
             log.warn("Tentativa de reenvio de código dentro do cooldown. email={}, tipo={}, segundosRestantes={}",
-                    email, tipo, segundosRestantes);
+                    LogSanitizer.mascararEmail(email), tipo, segundosRestantes);
             throw new IllegalStateException("Aguarde " + segundosRestantes + " segundos para solicitar um novo código.");
         }
 
@@ -52,7 +53,8 @@ public class CodigoVerificacaoService {
         codigoRepository.save(codigoVerificacao);
         emailService.enviarCodigoVerificacao(email, codigo, tipo);
 
-        log.info("Código de verificação gerado. email={}, tipo={}, expiracao={}", email, tipo, codigoVerificacao.getExpiracao());
+        log.info("Código de verificação gerado. email={}, tipo={}, expiracao={}",
+                LogSanitizer.mascararEmail(email), tipo, codigoVerificacao.getExpiracao());
     }
 
     @Transactional(readOnly = true)
@@ -67,30 +69,31 @@ public class CodigoVerificacaoService {
     @Transactional
     public void validar(String email, String codigoInformado, TipoCodigoVerificacao tipo) {
         Instant agora = Instant.now();
-        log.info("Validando código. email={}, tipo={}, codigoInformado={}, agora={}", email, tipo, codigoInformado, agora);
+        String emailMascarado = LogSanitizer.mascararEmail(email);
+        log.info("Validando código. email={}, tipo={}, agora={}", emailMascarado, tipo, agora);
 
         if (codigoInformado == null || codigoInformado.length() != TAMANHO_CODIGO) {
-            log.warn("Código com tamanho inválido. email={}, tipo={}, tamanho={}", email, tipo,
+            log.warn("Código com tamanho inválido. email={}, tipo={}, tamanho={}", emailMascarado, tipo,
                     codigoInformado == null ? 0 : codigoInformado.length());
             throw new IllegalArgumentException("O código deve ter exatamente " + TAMANHO_CODIGO + " dígitos.");
         }
 
         CodigoVerificacao codigo = codigoRepository.findByEmailAndTipoAndCodigoAndUtilizadoFalse(email, tipo, codigoInformado)
                 .orElseThrow(() -> {
-                    log.warn("Código não encontrado ou já utilizado. email={}, tipo={}", email, tipo);
+                    log.warn("Código não encontrado ou já utilizado. email={}, tipo={}", emailMascarado, tipo);
                     return new IllegalArgumentException("Código inválido ou já utilizado.");
                 });
 
         log.info("Código encontrado. id={}, expiracao={}", codigo.getId(), codigo.getExpiracao());
 
         if (!agora.isBefore(codigo.getExpiracao())) {
-            log.warn("Código expirado. email={}, tipo={}, expiracao={}, agora={}", email, tipo, codigo.getExpiracao(), agora);
+            log.warn("Código expirado. email={}, tipo={}, expiracao={}, agora={}", emailMascarado, tipo, codigo.getExpiracao(), agora);
             throw new IllegalArgumentException("Código expirado.");
         }
 
         codigo.setUtilizado(true);
         codigoRepository.save(codigo);
-        log.info("Código validado com sucesso. email={}, tipo={}", email, tipo);
+        log.info("Código validado com sucesso. email={}, tipo={}", emailMascarado, tipo);
     }
 
     private String gerarCodigo() {

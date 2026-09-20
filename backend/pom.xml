@@ -97,6 +97,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Logs estruturados (JSON) em produção -->
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>7.4</version>
+        </dependency>
+
         <!-- Dotenv (.env support) -->
         <dependency>
             <groupId>me.paulschwarz</groupId>

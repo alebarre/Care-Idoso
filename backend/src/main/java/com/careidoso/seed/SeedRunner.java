@@ -3,6 +3,7 @@ package com.careidoso.seed;
 import com.careidoso.model.Perfil;
 import com.careidoso.model.Usuario;
 import com.careidoso.repository.UsuarioRepository;
+import com.careidoso.util.LogSanitizer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -27,7 +28,7 @@ public class SeedRunner implements CommandLineRunner {
 
     private void criarSeNaoExistir(String nome, String email, String senha, Perfil perfil) {
         if (usuarioRepository.existsByEmail(email)) {
-            log.info("Usuário de teste já existe: {}", email);
+            log.info("Usuário de teste já existe: {}", LogSanitizer.mascararEmail(email));
             return;
         }
 
@@ -40,6 +41,6 @@ public class SeedRunner implements CommandLineRunner {
                 .build();
 
         usuarioRepository.save(usuario);
-        log.info("Usuário de teste criado: {} ({})", email, perfil.name());
+        log.info("Usuário de teste criado: {} ({})", LogSanitizer.mascararEmail(email), perfil.name());
     }
 }

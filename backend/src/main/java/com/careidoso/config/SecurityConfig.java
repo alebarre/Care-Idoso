@@ -1,5 +1,6 @@
 package com.careidoso.config;
 
+import com.careidoso.logging.CorrelationIdFilter;
 import com.careidoso.security.JwtFilter;
 import com.careidoso.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
+    private final CorrelationIdFilter correlationIdFilter;
     private final UsuarioService usuarioService;
     private final CorsProperties corsProperties;
     private final PasswordEncoder passwordEncoder;
@@ -51,6 +53,7 @@ public class SecurityConfig {
                 )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(correlationIdFilter, JwtFilter.class)
                 .build();
     }
 
