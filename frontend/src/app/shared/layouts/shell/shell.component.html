@@ -1,0 +1,34 @@
+<div class="app-shell">
+  <aside class="app-sidebar" *ngIf="!isLoginPage">
+    <div class="app-sidebar__brand">
+      <span class="app-sidebar__logo">Care Idoso</span>
+    </div>
+
+    <nav class="app-sidebar__nav">
+      <a
+        *ngFor="let item of itensNavegacao"
+        class="app-sidebar__link"
+        [routerLink]="item.path"
+        routerLinkActive="app-sidebar__link--active"
+        [routerLinkActiveOptions]="{ exact: !!item.exato }"
+      >
+        <fa-icon [icon]="['fas', item.icone]"></fa-icon>
+        <span>{{ item.label }}</span>
+      </a>
+    </nav>
+
+    <div class="app-sidebar__footer" *ngIf="usuarioLogado$ | async as usuario">
+      <div class="app-sidebar__user">
+        <span class="app-sidebar__user-name">{{ usuario.nome }}</span>
+        <span class="app-sidebar__user-role">{{ usuario.perfil }}</span>
+      </div>
+      <button class="icon-button" (click)="logout()" aria-label="Sair">
+        <fa-icon [icon]="['fas', 'sign-out-alt']"></fa-icon>
+      </button>
+    </div>
+  </aside>
+
+  <main class="app-shell__content" [class.app-shell__content--com-sidebar]="!isLoginPage">
+    <router-outlet></router-outlet>
+  </main>
+</div>
