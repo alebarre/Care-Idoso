@@ -1,7 +1,9 @@
 package com.careidoso.service;
 
 import com.careidoso.dto.request.NovaContaRequest;
+import com.careidoso.dto.request.RedefinirSenhaRequest;
 import com.careidoso.model.Perfil;
+import com.careidoso.model.TipoCodigoVerificacao;
 import com.careidoso.model.Usuario;
 import com.careidoso.repository.UsuarioRepository;
 import com.careidoso.security.JwtService;
@@ -17,8 +19,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -38,11 +43,11 @@ class AuthServiceTest {
     void setUp() {
         authService = new AuthService(authenticationManager, jwtService, codigoVerificacaoService,
                 refreshTokenService, usuarioRepository, passwordEncoder);
-        when(passwordEncoder.encode(any())).thenReturn("hash");
     }
 
     @Test
     void novaContaPublicaSempreCriaCuidadora() {
+        when(passwordEncoder.encode(any())).thenReturn("hash");
         when(usuarioRepository.findByEmail("novo@exemplo.com")).thenReturn(Optional.empty());
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(i -> i.getArgument(0));
 
@@ -55,6 +60,7 @@ class AuthServiceTest {
 
     @Test
     void novaContaNaoAlteraPerfilDeCadastroInativoExistente() {
+        when(passwordEncoder.encode(any())).thenReturn("hash");
         Usuario existente = Usuario.builder().nome("Admin").email("adm@exemplo.com")
                 .senha("x").perfil(Perfil.ADMIN).ativo(false).build();
         when(usuarioRepository.findByEmail("adm@exemplo.com")).thenReturn(Optional.of(existente));
@@ -62,5 +68,39 @@ class AuthServiceTest {
         authService.solicitarNovaConta(new NovaContaRequest("Outro Nome", "adm@exemplo.com", "abc123"));
 
         assertEquals(Perfil.ADMIN, existente.getPerfil());
+    }
+
+    @Test
+    void redefinirSenhaSemCodigoValidoNaoAlteraSenha() {
+        doThrow(new IllegalArgumentException("Código inválido ou já utilizado."))
+                .when(codigoVerificacaoService).validar("a@exemplo.com", "123456", TipoCodigoVerificacao.ESQUECI_SENHA);
+
+        assertThrows(IllegalArgumentException.class, () -> authService.redefinirSenha(
+                new RedefinirSenhaRequest("a@exemplo.com", "123456", "novaSenha1")));
+
+        verify(usuarioRepository, never()).save(any());
+        verify(refreshTokenService, never()).revogarTodosDoUsuario(any());
+    }
+
+    @Test
+    void redefinirSenhaComCodigoValidoGravaSenhaERevogaSessoes() {
+        Usuario usuario = Usuario.builder().id(7L).nome("Ana").email("a@exemplo.com")
+                .senha("antigo").perfil(Perfil.CUIDADORA).ativo(true).build();
+        when(usuarioRepository.findByEmail("a@exemplo.com")).thenReturn(Optional.of(usuario));
+        when(passwordEncoder.encode("novaSenha1")).thenReturn("hash-novo");
+
+        authService.redefinirSenha(new RedefinirSenhaRequest("a@exemplo.com", "123456", "novaSenha1"));
+
+        verify(codigoVerificacaoService).validar("a@exemplo.com", "123456", TipoCodigoVerificacao.ESQUECI_SENHA);
+        assertEquals("hash-novo", usuario.getSenha());
+        verify(refreshTokenService).revogarTodosDoUsuario(7L);
+    }
+
+    @Test
+    void validarCodigoDeEsqueciSenhaNaoConsomeOCodigo() {
+        authService.validarCodigo("a@exemplo.com", "123456", TipoCodigoVerificacao.ESQUECI_SENHA);
+
+        verify(codigoVerificacaoService).verificar("a@exemplo.com", "123456", TipoCodigoVerificacao.ESQUECI_SENHA);
+        verify(codigoVerificacaoService, never()).validar(any(), any(), any());
     }
 }

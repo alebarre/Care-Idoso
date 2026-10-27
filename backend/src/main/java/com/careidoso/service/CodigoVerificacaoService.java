@@ -114,9 +114,27 @@ public class CodigoVerificacaoService {
      */
     @Transactional
     public void validar(String email, String codigoInformado, TipoCodigoVerificacao tipo) {
+        CodigoVerificacao codigo = localizarValido(email, codigoInformado, tipo);
+        codigo.setUtilizado(true);
+        codigoRepository.save(codigo);
+        log.info("Código validado com sucesso. email={}, tipo={}", LogSanitizer.mascararEmail(email), tipo);
+    }
+
+    /**
+     * Confere o código sem consumi-lo. Serve para o passo intermediário de fluxos em
+     * que o código precisa ser apresentado de novo na operação final (ex.: redefinição
+     * de senha), que é quem o consome via {@link #validar}.
+     *
+     * @throws IllegalArgumentException nas mesmas condições de {@link #validar}
+     */
+    @Transactional(readOnly = true)
+    public void verificar(String email, String codigoInformado, TipoCodigoVerificacao tipo) {
+        localizarValido(email, codigoInformado, tipo);
+    }
+
+    private CodigoVerificacao localizarValido(String email, String codigoInformado, TipoCodigoVerificacao tipo) {
         Instant agora = Instant.now();
         String emailMascarado = LogSanitizer.mascararEmail(email);
-        log.info("Validando código. email={}, tipo={}, agora={}", emailMascarado, tipo, agora);
 
         if (codigoInformado == null || codigoInformado.length() != TAMANHO_CODIGO) {
             log.warn("Código com tamanho inválido. email={}, tipo={}, tamanho={}", emailMascarado, tipo,
@@ -130,21 +148,13 @@ public class CodigoVerificacaoService {
                     return new IllegalArgumentException("Código inválido ou já utilizado.");
                 });
 
-        log.info("Código encontrado. id={}, expiracao={}", codigo.getId(), codigo.getExpiracao());
-
         if (!agora.isBefore(codigo.getExpiracao())) {
             log.warn("Código expirado. email={}, tipo={}, expiracao={}, agora={}", emailMascarado, tipo, codigo.getExpiracao(), agora);
             throw new IllegalArgumentException("Código expirado.");
         }
-
-        codigo.setUtilizado(true);
-        codigoRepository.save(codigo);
-        log.info("Código validado com sucesso. email={}, tipo={}", emailMascarado, tipo);
+        return codigo;
     }
 
-    /**
-     * Sorteia {@code TAMANHO_CODIGO} dígitos, preservando zeros à esquerda.
-     */
     private String gerarCodigo() {
         StringBuilder sb = new StringBuilder(TAMANHO_CODIGO);
         for (int i = 0; i < TAMANHO_CODIGO; i++) {

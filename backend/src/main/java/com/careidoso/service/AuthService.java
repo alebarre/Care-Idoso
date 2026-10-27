@@ -112,10 +112,16 @@ public class AuthService {
     }
 
     /**
-     * Consome o código informado (uso único). Quem chama define o próximo passo.
+     * Valida o código informado. Para {@code ESQUECI_SENHA} apenas confere (não consome):
+     * o código precisa ser apresentado de novo em {@link #redefinirSenha}, que o consome.
+     * Os demais tipos são consumidos aqui (uso único).
      */
     @Transactional
     public void validarCodigo(String email, String codigo, TipoCodigoVerificacao tipo) {
+        if (tipo == TipoCodigoVerificacao.ESQUECI_SENHA) {
+            codigoVerificacaoService.verificar(email, codigo, tipo);
+            return;
+        }
         codigoVerificacaoService.validar(email, codigo, tipo);
     }
 
@@ -123,15 +129,17 @@ public class AuthService {
      * Troca a senha e revoga todos os refresh tokens do usuário (sessões abertas
      * precisam logar de novo).
      *
-     * Atenção: o código não é revalidado aqui. O {@code /validar-codigo} anterior já o
-     * consome, então esta operação confia no fluxo do frontend; o backend por si só não
-     * prova que quem chama possui o código. Candidato a reforço (ex.: token de
-     * redefinição emitido após a validação).
+     * Exige e consome o código {@code ESQUECI_SENHA} do e-mail: sem um código válido a
+     * senha não é alterada, mesmo que o chamador conheça o e-mail. O código é verificado
+     * antes de buscar o usuário, para não revelar se o e-mail existe.
      */
     @Transactional
     public void redefinirSenha(RedefinirSenhaRequest request) {
+        codigoVerificacaoService.validar(request.email(), request.codigo(), TipoCodigoVerificacao.ESQUECI_SENHA);
+
         Usuario usuario = usuarioRepository.findByEmail(request.email())
-                .orElseThrow(() -> new IllegalArgumentException("E-mail não cadastrado."));
+                .filter(u -> Boolean.TRUE.equals(u.getAtivo()))
+                .orElseThrow(() -> new IllegalArgumentException("Código inválido ou já utilizado."));
 
         usuario.setSenha(passwordEncoder.encode(request.novaSenha()));
         usuarioRepository.save(usuario);
