@@ -47,8 +47,8 @@ export class LoginComponent implements OnInit {
       },
       error: (err) => {
         this.carregando = false;
-        // 403 = credenciais corretas, mas conta inativa: o backend traz a mensagem específica
-        const detail = err?.status === 403 && err?.error?.mensagem
+        // 403 = conta inativa (credenciais corretas); 429 = rate limit: o backend traz a mensagem
+        const detail = (err?.status === 403 || err?.status === 429) && err?.error?.mensagem
           ? err.error.mensagem
           : 'E-mail ou senha inválidos.';
         this.messageService.add({

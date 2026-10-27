@@ -63,6 +63,13 @@ careidoso:
     access-expiration-ms: ${JWT_ACCESS_EXPIRATION_MS:3600000}
     # Refresh token com rotação (padrão 1 dia).
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:86400000}
+  # Rate limit por IP nos endpoints públicos de /api/auth (login, códigos, cadastro). 429 ao exceder.
+  # trust-forwarded-for só deve ser true atrás de um proxy confiável que sobrescreva X-Forwarded-For.
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    max-requests: ${RATE_LIMIT_MAX_REQUESTS:20}
+    window-seconds: ${RATE_LIMIT_WINDOW_SECONDS:60}
+    trust-forwarded-for: ${RATE_LIMIT_TRUST_FORWARDED_FOR:false}
   # Raiz do armazenamento local de fotos; precisa de volume persistente e fora do diretório público.
   upload:
     dir: ${UPLOAD_DIR:./uploads}
