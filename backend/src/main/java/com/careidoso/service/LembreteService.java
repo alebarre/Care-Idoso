@@ -11,6 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * Lembretes de medicação por idoso e medicamento. As consultas retornam só lembretes ativos, ordenados por horário.
+ */
 @Service
 @RequiredArgsConstructor
 public class LembreteService {
@@ -19,6 +22,12 @@ public class LembreteService {
     private final IdosoRepository idosoRepository;
     private final MedicamentoRepository medicamentoRepository;
 
+    /**
+     * Cria o lembrete após validar que idoso e medicamento existem. {@code ativo}
+     * omitido assume {@code true}.
+     *
+     * @throws IllegalArgumentException se idoso ou medicamento não existirem
+     */
     @Transactional
     public Lembrete criar(LembreteRequest request) {
         var idoso = idosoRepository.findById(request.idosoId())

@@ -6,6 +6,15 @@ import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
 
+/**
+ * Cadastro de idoso.
+ *
+ * @param nome           obrigatório, 3 a 120 caracteres
+ * @param dataNascimento opcional; se informada deve ser passada
+ * @param sexo           opcional, até 20 caracteres
+ * @param condicoes      opcional, até 1000 caracteres (dado de saúde)
+ * @param observacoes    opcional, até 2000 caracteres
+ */
 public record IdosoRequest(
         @NotBlank(message = "O nome do idoso é obrigatório.")
         @Size(min = 3, max = 120, message = "O nome deve ter entre {min} e {max} caracteres.")

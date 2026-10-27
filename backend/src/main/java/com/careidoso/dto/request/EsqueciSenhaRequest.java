@@ -4,6 +4,11 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Pedido de recuperação de senha.
+ *
+ * @param email e-mail da conta (obrigatório, formato válido, até 120 caracteres)
+ */
 public record EsqueciSenhaRequest(
         @NotBlank(message = "O e-mail é obrigatório.")
         @Email(message = "Informe um e-mail válido.")

@@ -10,12 +10,26 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Adaptador de {@code Usuario} para o Spring Security.
+ *
+ * É um snapshot imutável dos dados necessários à autenticação e à emissão do JWT.
+ * A authority é {@code ROLE_<perfil>} (ex.: {@code ROLE_ADMIN}), alinhada com o
+ * {@code hasRole(...)} de {@code SecurityConfig}. Também é o principal usado pelos
+ * services para identificar a cuidadora responsável por um registro.
+ *
+ * Conta com {@code ativo = false} é reportada como desabilitada
+ * ({@code isEnabled}), o que bloqueia o login pelo {@code DaoAuthenticationProvider}.
+ */
 @Getter
 public class UserDetailsImpl implements UserDetails {
 
     private final Long id;
     private final String nome;
     private final String email;
+    /**
+     * Hash BCrypt da senha (nunca texto plano); não deve ser logado nem serializado.
+     */
     private final String senha;
     private final Perfil perfil;
     private final boolean ativo;

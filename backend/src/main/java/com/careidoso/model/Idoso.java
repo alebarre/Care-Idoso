@@ -10,6 +10,9 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * Pessoa idosa acompanhada nos plantões. Contém dados de saúde (condições, observações): proteger e nunca logar.
+ */
 @Entity
 @Table(name = "idosos")
 @Getter
@@ -37,10 +40,16 @@ public class Idoso {
     @Column(length = 20)
     private String sexo;
 
+    /**
+     * Condições de saúde em texto livre (dado sensível).
+     */
     @Size(max = 1000, message = "As condições devem ter no máximo {max} caracteres.")
     @Column(name = "condicoes", length = 1000)
     private String condicoes;
 
+    /**
+     * Cuidados e preferências gerais em texto livre (podem conter dado sensível).
+     */
     @Size(max = 2000, message = "As observações devem ter no máximo {max} caracteres.")
     @Column(name = "observacoes", length = 2000)
     private String observacoes;

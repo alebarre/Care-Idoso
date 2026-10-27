@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Registro e histórico de medições (glicemia, pressão, temperatura). A cuidadora responsável vem do token. Acesso a qualquer usuário autenticado.
+ */
 @RestController
 @RequestMapping("/api/medicoes")
 @RequiredArgsConstructor

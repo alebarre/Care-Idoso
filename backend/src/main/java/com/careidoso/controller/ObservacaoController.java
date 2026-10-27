@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Observações livres sobre o idoso. A cuidadora responsável vem do token. Acesso a qualquer usuário autenticado.
+ */
 @RestController
 @RequestMapping("/api/observacoes")
 @RequiredArgsConstructor

@@ -5,6 +5,15 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Cadastro de medicamento/produto.
+ *
+ * @param nome         obrigatório, 2 a 120 caracteres
+ * @param descricao    opcional, até 500 caracteres
+ * @param dosagem      opcional, até 50 caracteres
+ * @param unidade      opcional, até 30 caracteres
+ * @param estoqueAtual obrigatório, zero ou positivo
+ */
 public record MedicamentoRequest(
         @NotBlank(message = "O nome do medicamento é obrigatório.")
         @Size(min = 2, max = 120, message = "O nome deve ter entre {min} e {max} caracteres.")

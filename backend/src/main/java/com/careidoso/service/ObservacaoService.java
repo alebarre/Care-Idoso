@@ -13,6 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * Observações livres de cuidadoras sobre o idoso (podem conter dados de saúde: não logar o texto).
+ */
 @Service
 @RequiredArgsConstructor
 public class ObservacaoService {
@@ -20,6 +23,12 @@ public class ObservacaoService {
     private final ObservacaoRepository observacaoRepository;
     private final IdosoRepository idosoRepository;
 
+    /**
+     * Registra a observação com a cuidadora autenticada como autora (id vindo do
+     * {@code SecurityContext}).
+     *
+     * @throws IllegalArgumentException se o idoso não existir
+     */
     @Transactional
     public Observacao criar(ObservacaoRequest request) {
         var idoso = idosoRepository.findById(request.idosoId())
@@ -38,6 +47,9 @@ public class ObservacaoService {
         return observacaoRepository.save(observacao);
     }
 
+    /**
+     * Observações do idoso, da mais recente para a mais antiga.
+     */
     @Transactional(readOnly = true)
     public List<Observacao> listarPorIdoso(Long idosoId) {
         return observacaoRepository.findByIdosoIdOrderByCreatedAtDesc(idosoId);

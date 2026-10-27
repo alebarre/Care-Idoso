@@ -4,6 +4,7 @@ import { LoginComponent } from './pages/login/login.component';
 import { EsqueciSenhaComponent } from './pages/esqueci-senha/esqueci-senha.component';
 import { NovaContaComponent } from './pages/nova-conta/nova-conta.component';
 
+/** Rotas públicas de autenticação (sem guard). */
 const routes: Routes = [
   { path: '', component: LoginComponent },
   { path: 'esqueci-senha', component: EsqueciSenhaComponent },

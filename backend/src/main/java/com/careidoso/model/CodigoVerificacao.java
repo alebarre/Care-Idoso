@@ -9,6 +9,14 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 
+/**
+ * Código numérico (OTP) enviado por e-mail para recuperar senha ou ativar conta.
+ *
+ * Uso único e curta duração: depois de validado ou substituído por um novo envio,
+ * fica com {@code utilizado = true}. Não há FK para usuário porque o código pode
+ * existir antes de a conta estar ativa; a associação é pelo e-mail. O código é
+ * excluído do {@code toString} para não vazar em logs.
+ */
 @Entity
 @Table(name = "codigos_verificacao")
 @Getter
@@ -23,28 +31,46 @@ public class CodigoVerificacao {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * E-mail de destino (chave lógica com o tipo); sem FK para {@code Usuario}.
+     */
     @NotBlank(message = "O e-mail é obrigatório.")
     @Column(nullable = false, length = 255)
     private String email;
 
+    /**
+     * Cinco dígitos numéricos, gravados em texto claro (vida útil de 1 minuto). Nunca logar.
+     */
     @NotBlank(message = "O código é obrigatório.")
     @Size(min = 5, max = 5, message = "O código deve ter {max} dígitos.")
     @Column(nullable = false, length = 5)
     private String codigo;
 
+    /**
+     * Finalidade do código; um código de um tipo não vale para o outro.
+     */
     @NotNull(message = "O tipo é obrigatório.")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private TipoCodigoVerificacao tipo;
 
+    /**
+     * Instante limite de validade (exclusivo: a partir dele o código é expirado).
+     */
     @NotNull(message = "A expiração é obrigatória.")
     @Column(nullable = false)
     private Instant expiracao;
 
+    /**
+     * Marca consumo ou invalidação; códigos utilizados nunca voltam a valer.
+     */
     @Column(nullable = false)
     @Builder.Default
     private Boolean utilizado = false;
 
+    /**
+     * Criação; base do cooldown de reenvio.
+     */
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

@@ -5,8 +5,14 @@ import { Subject, Subscription, takeUntil, interval, finalize } from 'rxjs';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { MessageService } from 'primeng/api';
 
+/** Etapas da recuperação: e-mail -> código (OTP) -> nova senha -> sucesso. */
 type EtapaEsqueciSenha = 'email' | 'codigo' | 'novaSenha' | 'sucesso';
 
+/**
+ * Recuperação de senha em etapas. O código validado é guardado em memória
+ * (`codigo`) e reenviado junto da nova senha em `redefinirSenha`, pois o
+ * backend revalida o OTP nessa chamada. Reenvio bloqueado por 60 s.
+ */
 @Component({
   selector: 'app-esqueci-senha',
   templateUrl: './esqueci-senha.component.html',
@@ -30,6 +36,7 @@ export class EsqueciSenhaComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private router: Router,
     private messageService: MessageService,
+    // `detectChanges` no finalize força a atualização do botão de carregando ao fim da requisição.
     private cdr: ChangeDetectorRef
   ) { }
 
@@ -54,6 +61,7 @@ export class EsqueciSenhaComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  /** Validador de grupo: `novaSenha` e `confirmarSenha` devem coincidir. */
   private senhasIguais(group: FormGroup) {
     const senha = group.get('novaSenha')?.value;
     const confirmacao = group.get('confirmarSenha')?.value;
@@ -172,6 +180,7 @@ export class EsqueciSenhaComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Inicia a contagem regressiva (1 s) que bloqueia o reenvio do código. */
   private iniciarContador(segundos: number): void {
     this.pararContador();
     this.tempoRestante = segundos;

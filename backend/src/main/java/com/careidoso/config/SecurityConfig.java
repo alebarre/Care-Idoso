@@ -29,6 +29,19 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+/**
+ * Configuração central de segurança HTTP: API stateless protegida por JWT.
+ *
+ * Decisões:
+ * - CSRF desabilitado: não há sessão nem cookie de autenticação; o token vai no
+ *   header {@code Authorization}, que o navegador não anexa automaticamente.
+ * - Sessão {@code STATELESS}: nada é guardado no servidor entre requisições.
+ * - A ordem dos matchers importa (vale o primeiro que casar): as regras de
+ *   {@code /api/usuarios/me} vêm antes das de {@code /api/usuarios/**} para que
+ *   qualquer usuário autenticado edite o próprio perfil, enquanto a gestão de
+ *   usuários fica restrita a ADMIN.
+ * - Autorização é sempre reforçada no backend; o frontend só esconde telas.
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -41,6 +54,17 @@ public class SecurityConfig {
     private final CorsProperties corsProperties;
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * Cadeia de filtros e regras de acesso por rota.
+     *
+     * Rotas públicas: {@code /api/auth/**} (login, refresh, recuperação de senha e
+     * cadastro) e {@code /api/publico/**}. Todo o resto exige autenticação; só a
+     * gestão de usuários exige ADMIN.
+     *
+     * Ordem dos filtros: {@code CorrelationIdFilter} -> {@code JwtFilter} ->
+     * {@code UsernamePasswordAuthenticationFilter}, de modo que todo log (inclusive
+     * falhas de JWT) já carregue o correlationId.
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -65,6 +89,11 @@ public class SecurityConfig {
                 .build();
     }
 
+    /**
+     * Resposta 401 em JSON para requisição sem autenticação válida (token ausente,
+     * inválido ou expirado). A mensagem é genérica de propósito, para não revelar o
+     * motivo exato da falha.
+     */
     @Bean
     public AuthenticationEntryPoint authenticationEntryPoint() {
         return (request, response, authException) -> {
@@ -75,6 +104,9 @@ public class SecurityConfig {
         };
     }
 
+    /**
+     * Resposta 403 em JSON para usuário autenticado sem a role exigida pela rota.
+     */
     @Bean
     public AccessDeniedHandler accessDeniedHandler() {
         return (request, response, accessDeniedException) -> {
@@ -85,6 +117,12 @@ public class SecurityConfig {
         };
     }
 
+    /**
+     * Provider de usuário/senha usado apenas no login: carrega o usuário via
+     * {@code UsuarioService} e confere a senha com BCrypt. Usuário inexistente é
+     * convertido em {@code BadCredentialsException} (comportamento padrão), evitando
+     * enumeração de contas; conta inativa gera {@code DisabledException}.
+     */
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
@@ -93,11 +131,19 @@ public class SecurityConfig {
         return provider;
     }
 
+    /**
+     * Expõe o {@code AuthenticationManager} do Spring para o {@code AuthService.login}.
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
+    /**
+     * CORS restrito às origens configuradas em {@code CorsProperties}. Com
+     * {@code allowCredentials = true} o curinga {@code *} em origens é proibido pelo
+     * Spring, e não deve ser contornado.
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();

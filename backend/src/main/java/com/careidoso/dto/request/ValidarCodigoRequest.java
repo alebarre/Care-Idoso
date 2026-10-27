@@ -5,6 +5,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Validação do código de ativação de conta (tipo implícito {@code NOVA_CONTA}).
+ *
+ * @param email  obrigatório, formato válido, até 120 caracteres
+ * @param codigo obrigatório, exatamente 5 dígitos numéricos
+ */
 public record ValidarCodigoRequest(
         @NotBlank(message = "O e-mail é obrigatório.")
         @Email(message = "Informe um e-mail válido.")

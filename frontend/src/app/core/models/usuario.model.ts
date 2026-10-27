@@ -1,3 +1,4 @@
+/** Usuário do sistema conforme o backend. */
 export interface Usuario {
   id: number;
   nome: string;
@@ -7,6 +8,10 @@ export interface Usuario {
   foto?: string | null;
 }
 
+/**
+ * Edição do próprio perfil. Campos omitidos não são alterados;
+ * `novaSenha` exige `senhaAtual`.
+ */
 export interface AtualizarPerfilRequest {
   nome?: string;
   email?: string;
@@ -14,6 +19,7 @@ export interface AtualizarPerfilRequest {
   novaSenha?: string;
 }
 
+/** Perfil atualizado + novo access token (o `sub` do JWT acompanha o e-mail). */
 export interface PerfilResponse {
   usuario: Usuario;
   accessToken: string;

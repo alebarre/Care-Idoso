@@ -20,9 +20,23 @@ import java.util.UUID;
 @Component
 public class CorrelationIdFilter extends OncePerRequestFilter {
 
+    /**
+     * Header HTTP de entrada e saída do identificador de correlação.
+     */
     public static final String HEADER_NAME = "X-Correlation-Id";
+    /**
+     * Chave no MDC referenciada pelo padrão de log em {@code logback-spring.xml}.
+     */
     public static final String MDC_KEY = "correlationId";
 
+    /**
+     * Reaproveita o header recebido ou gera um UUID, coloca no MDC, devolve no header
+     * da resposta e sempre limpa o MDC no {@code finally} (threads de servlet são
+     * reaproveitadas; sem a limpeza o id vazaria para outra requisição).
+     *
+     * Risco: o valor do header vem do cliente e vai para os logs; trate-o como dado
+     * não confiável (não confiar nele para autorização ou auditoria).
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                      HttpServletResponse response,

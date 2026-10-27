@@ -14,6 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * Pedidos de reposição de medicamentos/produtos feitos por cuidadoras.
+ */
 @Service
 @RequiredArgsConstructor
 public class PedidoService {
@@ -21,6 +24,12 @@ public class PedidoService {
     private final PedidoRepository pedidoRepository;
     private final MedicamentoRepository medicamentoRepository;
 
+    /**
+     * Cria o pedido com status {@code PENDENTE} em nome da usuária autenticada (id
+     * vindo do {@code SecurityContext}). Os itens são gravados em cascata.
+     *
+     * @throws IllegalArgumentException se algum medicamento do pedido não existir
+     */
     @Transactional
     public Pedido criar(PedidoRequest request) {
         var auth = SecurityContextHolder.getContext().getAuthentication();
@@ -55,6 +64,9 @@ public class PedidoService {
         return pedidoRepository.findAll();
     }
 
+    /**
+     * Pedidos da cuidadora, do mais recente para o mais antigo.
+     */
     @Transactional(readOnly = true)
     public List<Pedido> listarPorCuidadora(Long cuidadoraId) {
         return pedidoRepository.findByCuidadoraIdOrderByCreatedAtDesc(cuidadoraId);

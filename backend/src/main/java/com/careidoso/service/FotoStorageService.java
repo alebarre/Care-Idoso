@@ -20,15 +20,30 @@ import java.util.UUID;
 @Service
 public class FotoStorageService {
 
+    /**
+     * Limite de 2 MB, alinhado a {@code spring.servlet.multipart.max-file-size}.
+     */
     private static final long TAMANHO_MAXIMO = 2L * 1024 * 1024;
 
+    /**
+     * Diretório absoluto e normalizado das fotos ({@code careidoso.upload.dir}/fotos).
+     * Base da proteção contra path traversal em {@code resolver}.
+     */
     private final Path diretorio;
 
     public FotoStorageService(@Value("${careidoso.upload.dir}") String diretorio) {
         this.diretorio = Path.of(diretorio).toAbsolutePath().normalize().resolve("fotos");
     }
 
-    /** Valida e grava a foto; devolve o nome do arquivo gerado. */
+    /**
+     * Valida e grava a foto; devolve o nome do arquivo gerado.
+     *
+     * Validações: não vazia, até 2 MB e assinatura de PNG ou JPEG (magic bytes).
+     * Sobrescrever é seguro porque o nome é um UUID novo.
+     *
+     * @throws IllegalArgumentException arquivo ausente, grande demais ou de formato inválido
+     * @throws IllegalStateException falha de I/O ao gravar (vira 503)
+     */
     public String salvar(MultipartFile arquivo) {
         if (arquivo == null || arquivo.isEmpty()) {
             throw new IllegalArgumentException("Selecione uma foto para enviar.");
@@ -51,11 +66,20 @@ public class FotoStorageService {
         return nome;
     }
 
+    /**
+     * Abre a foto pelo nome salvo no usuário.
+     *
+     * @return o recurso, ou {@code null} se o nome for vazio/inválido ou o arquivo não existir
+     */
     public Resource carregar(String nome) {
         Path arquivo = resolver(nome);
         return arquivo != null && Files.isReadable(arquivo) ? new FileSystemResource(arquivo) : null;
     }
 
+    /**
+     * Apaga a foto se existir. Falha de I/O é ignorada de propósito: uma foto órfã
+     * em disco não deve impedir a troca de foto.
+     */
     public void remover(String nome) {
         Path arquivo = resolver(nome);
         if (arquivo == null) {
@@ -68,6 +92,9 @@ public class FotoStorageService {
         }
     }
 
+    /**
+     * Content-Type a partir da extensão gerada pelo servidor (apenas PNG ou JPEG).
+     */
     public static String tipoMidia(String nome) {
         return nome.endsWith(".png") ? "image/png" : "image/jpeg";
     }

@@ -6,6 +6,13 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 
+/**
+ * Definição de nova senha após validar o código de recuperação.
+ *
+ * @param email     obrigatório, formato válido, até 120 caracteres
+ * @param codigo    obrigatório, exatamente 5 dígitos numéricos
+ * @param novaSenha obrigatória, 6 a 100 caracteres, com ao menos uma letra e um número
+ */
 public record RedefinirSenhaRequest(
         @NotBlank(message = "O e-mail é obrigatório.")
         @Email(message = "Informe um e-mail válido.")

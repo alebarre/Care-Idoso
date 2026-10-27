@@ -6,6 +6,16 @@ import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
 
+/**
+ * Registro de medicação administrada. A cuidadora responsável não é enviada: vem do token.
+ *
+ * @param idosoId       obrigatório; deve existir
+ * @param medicamentoId obrigatório; deve existir
+ * @param dosagemAdmin  obrigatória, até 50 caracteres
+ * @param horario       obrigatório; data/hora da administração
+ * @param via           opcional, até 50 caracteres (ex.: oral)
+ * @param observacao    opcional, até 1000 caracteres
+ */
 public record MedicacaoRequest(
         @NotNull(message = "O idoso é obrigatório.")
         Long idosoId,

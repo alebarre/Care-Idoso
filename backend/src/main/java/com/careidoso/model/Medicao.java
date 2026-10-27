@@ -9,6 +9,9 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
+/**
+ * Medição de saúde (glicemia, pressão, temperatura) registrada por uma cuidadora.
+ */
 @Entity
 @Table(name = "medicoes")
 @Getter
@@ -33,6 +36,9 @@ public class Medicao {
     @Column(nullable = false, length = 20)
     private TipoMedicao tipo;
 
+    /**
+     * Valor em texto (ex.: pressão "120/80"); a interpretação depende do {@code tipo}.
+     */
     @NotBlank(message = "O valor da medição é obrigatório.")
     @Size(max = 30, message = "O valor deve ter no máximo {max} caracteres.")
     @Column(nullable = false, length = 30)
@@ -46,6 +52,9 @@ public class Medicao {
     @Column(length = 1000)
     private String observacao;
 
+    /**
+     * Responsável pelo registro; definida no servidor a partir do token.
+     */
     @NotNull(message = "A cuidadora responsável é obrigatória.")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cuidadora_id", nullable = false)

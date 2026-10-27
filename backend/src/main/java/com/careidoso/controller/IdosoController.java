@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Cadastro e consulta de idosos. Qualquer usuário autenticado (ADMIN ou CUIDADORA) tem acesso; não há restrição por role na rota.
+ */
 @RestController
 @RequestMapping("/api/idosos")
 @RequiredArgsConstructor

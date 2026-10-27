@@ -10,6 +10,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Pedido de reposição aberto por uma cuidadora. Os itens pertencem ao pedido
+ * ({@code cascade ALL} e {@code orphanRemoval}); apagar o pedido apaga os itens.
+ */
 @Entity
 @Table(name = "pedidos")
 @Getter
@@ -39,6 +43,9 @@ public class Pedido {
     @Column(length = 500)
     private String observacao;
 
+    /**
+     * Itens do pedido; o lado dono do relacionamento é {@code PedidoItem.pedido}.
+     */
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<PedidoItem> itens = new ArrayList<>();
@@ -47,6 +54,9 @@ public class Pedido {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    /**
+     * Ciclo de vida do pedido, iniciando em {@code PENDENTE}.
+     */
     public enum StatusPedido {
         PENDENTE,
         EM_REPOSICAO,

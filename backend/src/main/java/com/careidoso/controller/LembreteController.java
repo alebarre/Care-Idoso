@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Lembretes de medicação. Qualquer usuário autenticado (ADMIN ou CUIDADORA) tem acesso; listagens retornam apenas lembretes ativos, ordenados por horário.
+ */
 @RestController
 @RequestMapping("/api/lembretes")
 @RequiredArgsConstructor

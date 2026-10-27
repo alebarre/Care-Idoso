@@ -12,6 +12,13 @@ import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Envio de e-mails transacionais (HTML) via SMTP.
+ *
+ * Hoje só envia códigos de verificação. O código e o destinatário não são
+ * logados. Os textos de validade (1 minuto) nos templates precisam acompanhar
+ * {@code CodigoVerificacaoService.TTL_MINUTOS}.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -19,9 +26,18 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
+    /**
+     * Remetente ({@code careidoso.email.from}); deve ser um endereço autorizado no servidor SMTP.
+     */
     @Value("${careidoso.email.from}")
     private String from;
 
+    /**
+     * Escolhe assunto e template conforme o tipo e envia o código ao destinatário.
+     *
+     * @throws IllegalStateException se o SMTP falhar (mensagem genérica ao usuário;
+     *         o detalhe técnico fica só no log do servidor)
+     */
     public void enviarCodigoVerificacao(String email, String codigo, TipoCodigoVerificacao tipo) {
         String assunto = tipo == TipoCodigoVerificacao.ESQUECI_SENHA
                 ? "Redefinição de senha — Care Idoso"
@@ -34,6 +50,10 @@ public class EmailService {
         enviar(email, assunto, corpo);
     }
 
+    /**
+     * Envia a mensagem MIME em UTF-8 com corpo HTML. Apenas confirma o envio no log,
+     * sem destinatário nem conteúdo.
+     */
     private void enviar(String para, String assunto, String corpoHtml) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -56,6 +76,12 @@ public class EmailService {
         }
     }
 
+    /**
+     * HTML do e-mail de recuperação de senha. O código é inserido via
+     * {@code formatted}; é seguro porque é gerado internamente (só dígitos). Dentro do
+     * text block, {@code %%} é um {@code %} literal, necessário por causa do
+     * {@code formatted}.
+     */
     private String templateRedefinicaoSenha(String codigo) {
         return """
                 <!DOCTYPE html>
@@ -104,6 +130,9 @@ public class EmailService {
                 """.formatted(codigo);
     }
 
+    /**
+     * HTML do e-mail de ativação de conta (mesmas observações do template de senha).
+     */
     private String templateNovaConta(String codigo) {
         return """
                 <!DOCTYPE html>

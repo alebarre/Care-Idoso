@@ -7,6 +7,8 @@ import { LoggerService } from '../services/logger.service';
 /**
  * Loga todo erro HTTP de forma anonimizada, mesmo quando o componente
  * chamador também trata o erro localmente (ex.: toast de mensagem amigável).
+ * Registra apenas status e URL (sem corpo/headers, que podem conter PII ou tokens)
+ * e repropaga o erro intacto.
  */
 @Injectable()
 export class HttpErrorLoggingInterceptor implements HttpInterceptor {

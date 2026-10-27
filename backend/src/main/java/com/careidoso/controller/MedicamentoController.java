@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Catálogo de medicamentos e estoque. Acesso a qualquer usuário autenticado.
+ */
 @RestController
 @RequestMapping("/api/medicamentos")
 @RequiredArgsConstructor

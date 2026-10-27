@@ -3,6 +3,10 @@ import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './core/guards/auth.guard';
 import { AdminGuard } from './core/guards/admin.guard';
 
+/**
+ * Rotas raiz, todas lazy. `login` é pública; as demais exigem `AuthGuard`,
+ * e `usuarios` também `AdminGuard`. Rota desconhecida volta ao dashboard.
+ */
 const routes: Routes = [
   {
     path: 'login',

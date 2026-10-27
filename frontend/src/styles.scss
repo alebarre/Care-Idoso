@@ -1,7 +1,9 @@
-/* Design System — inspirado no app Uber */
+/* Design System global (estética "Uber": preto/branco, bordas arredondadas).
+   Seções: tokens (:root) -> base -> responsividade -> utilitários -> botões -> inputs -> cards/listas -> telas internas -> fluxos de auth.
+   Estilos específicos de uma tela ficam no .scss do componente. */
 
 :root {
-  /* Cores */
+  /* Cores — nota: --uber-green é, na prática, o azul de destaque (#276ef1); nome mantido por compatibilidade. */
   --uber-black: #000000;
   --uber-white: #ffffff;
   --uber-gray-100: #f3f3f3;
@@ -47,7 +49,7 @@
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
 
-  /* Tokens semânticos */
+  /* Tokens semânticos: componentes devem usar estes, não as cores brutas acima */
   --surface-ground: var(--uber-white);
   --surface-card: var(--uber-white);
   --surface-muted: var(--uber-gray-100);
@@ -94,7 +96,7 @@ button {
   font-family: inherit;
 }
 
-/* Container mobile-first */
+/* Container mobile-first: coluna única centralizada */
 .mobile-container {
   width: 100%;
   max-width: 480px;
@@ -112,8 +114,8 @@ button {
    - 480px  → celular deitado
    - 768px  → tablet em pé
    - 1024px → tablet deitado
-   - 1366px → desktop
-*/
+   - 1366px → desktop (a sidebar do shell só aparece a partir daqui)
+   Mantenha estes mesmos valores em qualquer @media novo. */
 
 /* Container utilitário de largura máxima, cresce por breakpoint */
 .container {

@@ -4,6 +4,11 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { MessageService } from 'primeng/api';
 
+/**
+ * Tela de login. Em sucesso, `AuthService` já persistiu os tokens e a
+ * navegação vai para `/`. Falhas exibem mensagem genérica (sem revelar
+ * se o e-mail existe).
+ */
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',

@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Registro e histórico de medicações administradas. A cuidadora responsável é definida no servidor a partir do token. Acesso a qualquer usuário autenticado.
+ */
 @RestController
 @RequestMapping("/api/medicacoes")
 @RequiredArgsConstructor

@@ -4,6 +4,13 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Item de um pedido de reposição.
+ *
+ * @param medicamentoId obrigatório; deve existir
+ * @param quantidade    obrigatória, maior que zero
+ * @param observacao    opcional, até 500 caracteres
+ */
 public record PedidoItemRequest(
         @NotNull(message = "O medicamento/produto é obrigatório.")
         Long medicamentoId,

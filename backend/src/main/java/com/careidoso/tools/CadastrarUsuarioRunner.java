@@ -14,12 +14,16 @@ import org.springframework.stereotype.Component;
 /**
  * Ferramenta manual para cadastrar um usuário direto no banco, com a senha já
  * criptografada em BCrypt. Não roda junto com a aplicação normal: só é ativada
- * explicitamente com o profile "cadastrar-usuario" e os dados via variáveis de ambiente.
+ * explicitamente com o profile "cadastrar-usuario" e os dados via variáveis de
+ * ambiente (a senha não vai em argumento de linha de comando nem em arquivo).
+ *
+ * Segurança: o hash BCrypt gerado é escrito no log ao final; trate esse log como
+ * sensível e não o compartilhe.
  *
  * Exemplo de execução:
  *   NOVO_USUARIO_NOME="Maria Cuidadora" \
- *   NOVO_USUARIO_EMAIL="maria@teste.com" \
- *   NOVO_USUARIO_SENHA="senhaForte123" \
+ *   NOVO_USUARIO_EMAIL="maria@exemplo.com" \
+ *   NOVO_USUARIO_SENHA="<defina-uma-senha-forte>" \
  *   NOVO_USUARIO_PERFIL="CUIDADORA" \
  *   mvn spring-boot:run -Dspring-boot.run.profiles=cadastrar-usuario
  */
@@ -68,6 +72,9 @@ public class CadastrarUsuarioRunner implements CommandLineRunner {
         log.info("Hash da senha gerado (BCrypt): {}", hashSenha);
     }
 
+    /**
+     * Lê a variável de ambiente obrigatória; falha de forma explícita se estiver ausente.
+     */
     private String obrigatorio(String variavelDeAmbiente) {
         String valor = System.getenv(variavelDeAmbiente);
         if (valor == null || valor.isBlank()) {

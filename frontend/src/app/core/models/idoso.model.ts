@@ -1,3 +1,4 @@
+/** Pessoa idosa acompanhada. */
 export interface Idoso {
   id: number;
   nome: string;

@@ -13,6 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * Registro de medições de saúde (dados sensíveis: nunca logar valores).
+ */
 @Service
 @RequiredArgsConstructor
 public class MedicaoService {
@@ -20,6 +23,12 @@ public class MedicaoService {
     private final MedicaoRepository medicaoRepository;
     private final IdosoRepository idosoRepository;
 
+    /**
+     * Registra a medição com a cuidadora autenticada como responsável (id vindo do
+     * {@code SecurityContext}).
+     *
+     * @throws IllegalArgumentException se o idoso não existir
+     */
     @Transactional
     public Medicao criar(MedicaoRequest request) {
         var idoso = idosoRepository.findById(request.idosoId())
@@ -41,6 +50,9 @@ public class MedicaoService {
         return medicaoRepository.save(medicao);
     }
 
+    /**
+     * Histórico do idoso, do mais recente para o mais antigo.
+     */
     @Transactional(readOnly = true)
     public List<Medicao> listarPorIdoso(Long idosoId) {
         return medicaoRepository.findByIdosoIdOrderByCreatedAtDesc(idosoId);

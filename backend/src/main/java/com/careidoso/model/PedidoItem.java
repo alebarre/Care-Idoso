@@ -6,6 +6,9 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
+/**
+ * Item de um pedido: medicamento/produto e quantidade solicitada.
+ */
 @Entity
 @Table(name = "pedido_itens")
 @Getter

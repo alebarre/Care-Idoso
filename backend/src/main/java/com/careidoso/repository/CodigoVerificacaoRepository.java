@@ -12,22 +12,36 @@ import java.util.Optional;
 
 public interface CodigoVerificacaoRepository extends JpaRepository<CodigoVerificacao, Long> {
 
+    /**
+     * Código mais recente ainda utilizável (não usado e com expiração posterior a {@code agora}).
+     */
     Optional<CodigoVerificacao> findTopByEmailAndTipoAndUtilizadoFalseAndExpiracaoAfterOrderByCreatedAtDesc(
             String email,
             TipoCodigoVerificacao tipo,
             Instant agora
     );
 
+    /**
+     * Há código não usado criado depois de {@code depoisDe}? Base do cooldown de reenvio.
+     */
     boolean existsByEmailAndTipoAndUtilizadoFalseAndCreatedAtAfter(
             String email,
             TipoCodigoVerificacao tipo,
             Instant depoisDe
     );
 
+    /**
+     * Marca como utilizados todos os códigos pendentes do e-mail e tipo. Query de
+     * atualização em lote: precisa de transação ativa (chamada a partir de service).
+     */
     @Modifying
     @Query("UPDATE CodigoVerificacao c SET c.utilizado = true WHERE c.email = :email AND c.tipo = :tipo AND c.utilizado = false")
     void invalidarCodigosPendentes(@Param("email") String email, @Param("tipo") TipoCodigoVerificacao tipo);
 
+    /**
+     * Busca o código exato ainda não usado. A expiração é verificada pelo service,
+     * para devolver mensagem específica de "expirado".
+     */
     Optional<CodigoVerificacao> findByEmailAndTipoAndCodigoAndUtilizadoFalse(
             String email,
             TipoCodigoVerificacao tipo,

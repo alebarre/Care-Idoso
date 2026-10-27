@@ -23,6 +23,11 @@ import { BadgeModule } from 'primeng/badge';
 import { MessageService } from 'primeng/api';
 import { AvatarComponent } from './components/avatar/avatar.component';
 
+/**
+ * Módulo compartilhado: reexporta módulos comuns do Angular, componentes PrimeNG
+ * usados no app e FontAwesome, para que módulos de funcionalidade importem só este.
+ * Registra o pacote de ícones `fas` e provê o `MessageService` (toasts).
+ */
 @NgModule({
   declarations: [AvatarComponent],
   imports: [
@@ -72,6 +77,7 @@ import { AvatarComponent } from './components/avatar/avatar.component';
 })
 export class SharedModule {
   constructor(library: FaIconLibrary) {
+    // Registra todos os ícones sólidos; referencie por nome (ex.: `icon="house"`).
     library.addIconPacks(fas);
   }
 }

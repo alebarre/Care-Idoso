@@ -9,6 +9,9 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
+/**
+ * Anotação livre de uma cuidadora sobre o idoso (pode conter dados de saúde).
+ */
 @Entity
 @Table(name = "observacoes")
 @Getter
@@ -33,6 +36,9 @@ public class Observacao {
     @Column(nullable = false, length = 3000)
     private String texto;
 
+    /**
+     * Autora da observação; definida no servidor a partir do token.
+     */
     @NotNull(message = "A cuidadora responsável é obrigatória.")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cuidadora_id", nullable = false)

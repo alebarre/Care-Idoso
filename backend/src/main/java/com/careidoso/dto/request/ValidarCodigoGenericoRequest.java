@@ -7,6 +7,13 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Validação de código de verificação de qualquer tipo.
+ *
+ * @param email  obrigatório, formato válido, até 120 caracteres
+ * @param codigo obrigatório, exatamente 5 dígitos numéricos
+ * @param tipo   obrigatório; finalidade do código
+ */
 public record ValidarCodigoGenericoRequest(
         @NotBlank(message = "O e-mail é obrigatório.")
         @Email(message = "Informe um e-mail válido.")

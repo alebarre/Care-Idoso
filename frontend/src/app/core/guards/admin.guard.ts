@@ -2,6 +2,11 @@ import { Injectable } from '@angular/core';
 import { CanActivate, Router } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 
+/**
+ * Restringe rotas ao perfil `ADMIN`; os demais voltam para `/`.
+ * Proteção de UX apenas: o backend reforça a role em cada endpoint.
+ * Deve ser usado depois do `AuthGuard`.
+ */
 @Injectable({
   providedIn: 'root'
 })

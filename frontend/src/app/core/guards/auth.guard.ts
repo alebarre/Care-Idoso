@@ -2,6 +2,10 @@ import { Injectable } from '@angular/core';
 import { CanActivate, Router } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 
+/**
+ * Protege rotas privadas: sem sessão (access ou refresh token), redireciona para `/login`.
+ * Não valida o token; a expiração é tratada pelo `JwtInterceptor` ao chamar a API.
+ */
 @Injectable({
   providedIn: 'root'
 })

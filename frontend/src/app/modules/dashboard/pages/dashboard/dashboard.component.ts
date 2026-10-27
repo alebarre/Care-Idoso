@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { AuthService } from '../../../../core/auth/auth.service';
 
+/** Página inicial pós-login; expõe `authService` ao template para saudação e atalhos por perfil. */
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',

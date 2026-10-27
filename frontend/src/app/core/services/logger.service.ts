@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { LogLevel } from '../models/environment.model';
 
+/** Formato de uma entrada de log, também usado como payload de telemetria. */
 interface EntradaLog {
   timestamp: string;
   correlationId: string | null;
@@ -10,6 +11,7 @@ interface EntradaLog {
   contexto?: Record<string, unknown>;
 }
 
+/** Severidade numérica para aplicar o nível mínimo configurado no environment. */
 const ORDEM_NIVEL: Record<LogLevel, number> = {
   debug: 0,
   info: 1,
@@ -20,12 +22,17 @@ const ORDEM_NIVEL: Record<LogLevel, number> = {
 /**
  * Serviço central de logging do front-end. Nunca receber senha, token,
  * e-mail ou dado de saúde em `contexto` — apenas identificadores técnicos.
+ *
+ * Em desenvolvimento escreve no console; em produção só envia erros
+ * (`error`) via `navigator.sendBeacon` para `environment.logging.telemetryUrl`,
+ * se configurada. Entradas abaixo de `logging.minLevel` são descartadas.
  */
 @Injectable({ providedIn: 'root' })
 export class LoggerService {
 
   private correlationIdAtual: string | null = null;
 
+  /** Define o id usado nas próximas entradas; chamado pelo `CorrelationIdInterceptor` a cada requisição. */
   definirCorrelationId(correlationId: string): void {
     this.correlationIdAtual = correlationId;
   }
@@ -70,12 +77,13 @@ export class LoggerService {
     }
   }
 
+  /** Envio best-effort e sem bloquear a UI (sendBeacon); falhas são ignoradas. */
   private enviarTelemetria(entrada: EntradaLog): void {
     try {
       const payload = new Blob([JSON.stringify(entrada)], { type: 'application/json' });
       navigator.sendBeacon?.(environment.logging.telemetryUrl as string, payload);
     } catch {
-      // Falha ao enviar telemetria não deve interromper a aplicação.
+      // Telemetria é opcional: falha aqui nunca deve afetar o usuário.
     }
   }
 }

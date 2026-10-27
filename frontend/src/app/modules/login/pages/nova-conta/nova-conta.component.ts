@@ -5,8 +5,15 @@ import { Subject, Subscription, takeUntil, interval, finalize } from 'rxjs';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { MessageService } from 'primeng/api';
 
+/** Etapas do cadastro: dados -> código (OTP por e-mail) -> sucesso. */
 type EtapaNovaConta = 'dados' | 'codigo' | 'sucesso';
 
+/**
+ * Cadastro público em duas fases: envia os dados (a API dispara o código por
+ * e-mail) e valida o código de 5 dígitos. Contas criadas aqui são sempre
+ * `CUIDADORA` (perfil fixo no request).
+ * O reenvio fica bloqueado por 60 s (`tempoRestante`).
+ */
 @Component({
   selector: 'app-nova-conta',
   templateUrl: './nova-conta.component.html',
@@ -27,6 +34,7 @@ export class NovaContaComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private router: Router,
     private messageService: MessageService,
+    // `detectChanges` no finalize força a atualização do botão de carregando ao fim da requisição.
     private cdr: ChangeDetectorRef
   ) { }
 
@@ -49,6 +57,7 @@ export class NovaContaComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  /** Validador de grupo: `senha` e `confirmarSenha` devem coincidir. */
   private senhasIguais(group: FormGroup) {
     const senha = group.get('senha')?.value;
     const confirmacao = group.get('confirmarSenha')?.value;
@@ -152,6 +161,7 @@ export class NovaContaComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Inicia a contagem regressiva (1 s) que bloqueia o reenvio do código. */
   private iniciarContador(segundos: number): void {
     this.pararContador();
     this.tempoRestante = segundos;

@@ -5,6 +5,10 @@ import { Subscription } from 'rxjs';
 /**
  * Mostra a foto do usuário (buscada com o JWT, pois o endpoint é autenticado)
  * ou a inicial do nome quando não há foto.
+ *
+ * Inputs: `nome` (fonte da inicial), `foto` (URL da API) e `tamanho` em px.
+ * A imagem vira um object URL (blob) que é revogado ao trocar/destruir,
+ * evitando vazamento de memória.
  */
 @Component({
   selector: 'app-avatar',
@@ -15,6 +19,7 @@ import { Subscription } from 'rxjs';
 export class AvatarComponent implements OnChanges, OnDestroy {
   @Input() nome: string | null | undefined = '';
   @Input() foto: string | null | undefined = null;
+  /** Lado do avatar em pixels. */
   @Input() tamanho = 48;
 
   fotoSrc: string | null = null;

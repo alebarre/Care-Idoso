@@ -10,6 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * Cadastro e consulta de idosos. Contém dados sensíveis de saúde (condições, observações): nunca logar seus campos.
+ */
 @Service
 @RequiredArgsConstructor
 public class IdosoService {
@@ -36,6 +39,9 @@ public class IdosoService {
                 .toList();
     }
 
+    /**
+     * @throws IllegalArgumentException se não existir (vira 400 com mensagem do serviço)
+     */
     @Transactional(readOnly = true)
     public IdosoResponse buscarPorId(Long id) {
         Idoso idoso = idosoRepository.findById(id)

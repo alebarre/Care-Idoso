@@ -10,6 +10,9 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
+/**
+ * Item do catálogo de medicamentos/produtos, com controle de estoque.
+ */
 @Entity
 @Table(name = "medicamentos")
 @Getter
@@ -41,6 +44,9 @@ public class Medicamento {
     @Column(length = 30)
     private String unidade;
 
+    /**
+     * Quantidade em estoque; nunca negativa.
+     */
     @NotNull(message = "O estoque atual é obrigatório.")
     @PositiveOrZero(message = "O estoque atual não pode ser negativo.")
     @Column(name = "estoque_atual", nullable = false)

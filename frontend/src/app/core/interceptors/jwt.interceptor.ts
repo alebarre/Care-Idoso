@@ -3,10 +3,22 @@ import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest
 import { BehaviorSubject, Observable, catchError, filter, switchMap, take, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 
+/**
+ * Anexa `Authorization: Bearer` às chamadas e renova o access token em 401.
+ *
+ * Fluxo de refresh: a primeira requisição que recebe 401 dispara
+ * `refreshAccessToken()`; as demais aguardam em `accessTokenRenovado$` e são
+ * reenviadas com o novo token (evita várias renovações simultâneas, que
+ * invalidariam umas às outras por causa da rotação do refresh token).
+ * Se a renovação falhar, faz logout e redireciona para o login.
+ * Rotas `/api/auth/*` ficam de fora para não gerar laço de refresh.
+ */
 @Injectable()
 export class JwtInterceptor implements HttpInterceptor {
 
+  /** Trava para garantir um único refresh por vez. */
   private refreshEmAndamento = false;
+  /** Emite o novo access token para liberar requisições que esperavam o refresh; `null` = ainda renovando. */
   private accessTokenRenovado$ = new BehaviorSubject<string | null>(null);
 
   constructor(private authService: AuthService) { }
@@ -38,6 +50,7 @@ export class JwtInterceptor implements HttpInterceptor {
     return req;
   }
 
+  /** Endpoints de autenticação são públicos e não devem receber token nem disparar refresh. */
   private ehRotaDeAuth(req: HttpRequest<unknown>): boolean {
     return req.url.startsWith('/api/auth');
   }

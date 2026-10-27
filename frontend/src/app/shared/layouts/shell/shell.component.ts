@@ -3,6 +3,7 @@ import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 
+/** Item do menu lateral/inferior. `exato` evita que `/` fique ativo em todas as rotas. */
 interface ItemNavegacao {
   path: string;
   icone: string;
@@ -11,6 +12,7 @@ interface ItemNavegacao {
   somenteAdmin?: boolean;
 }
 
+/** Menu de navegação; itens `somenteAdmin` são ocultados para outros perfis (UX; backend reforça). */
 const ITENS_NAVEGACAO: ItemNavegacao[] = [
   { path: '/', icone: 'house', label: 'Dashboard', exato: true },
   { path: '/rotinas', icone: 'clipboard-list', label: 'Rotinas' },
@@ -21,6 +23,10 @@ const ITENS_NAVEGACAO: ItemNavegacao[] = [
   { path: '/usuarios', icone: 'users', label: 'Usuários', somenteAdmin: true }
 ];
 
+/**
+ * Layout raiz da aplicação: sidebar fixa em desktop (>= 1366px) e navegação
+ * mobile nos demais. Fica oculto nas telas de login (`isLoginPage`).
+ */
 @Component({
   selector: 'app-shell',
   templateUrl: './shell.component.html',
@@ -36,7 +42,7 @@ export class ShellComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // o token não traz a foto; busca nome/foto atuais ao abrir o app já logado
+    // O token não traz a foto; busca nome/foto atuais ao abrir o app já logado.
     if (this.authService.estaLogado()) {
       this.authService.carregarPerfil().subscribe({ error: () => { /* mantém dados do token */ } });
     }

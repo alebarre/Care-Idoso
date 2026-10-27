@@ -2,23 +2,29 @@ spring:
   application:
     name: care-idoso-backend
 
+  # Perfil padrão dev; em produção defina SPRING_PROFILES_ACTIVE (o perfil dev ativa seeds e SQL visível).
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
 
   config:
+    # Carrega variáveis de um .env local (opcional); segredos nunca ficam neste arquivo nem no repositório.
     import: optional:file:../.env[.properties],optional:file:.env[.properties]
 
   jpa:
+    # Desligado: evita lazy loading fora da transação (acesso ao banco só dentro dos services).
     open-in-view: false
     hibernate:
+      # O schema é gerenciado só pelo Flyway; o Hibernate apenas valida que as entidades batem com ele.
       ddl-auto: validate
     properties:
       hibernate:
         format_sql: true
         jdbc:
+          # Fuso usado pelo JDBC para datas sem fuso; deve coincidir com o fuso padrão definido em CareIdosoApplication.
           time_zone: America/Sao_Paulo
 
   servlet:
+    # Limites de upload (foto de perfil); manter alinhados com FotoStorageService e GlobalExceptionHandler.
     multipart:
       max-file-size: 2MB
       max-request-size: 3MB
@@ -26,8 +32,10 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+    # Permite adotar o Flyway em banco já existente. Migrations aplicadas são imutáveis: qualquer alteração no arquivo (até comentário) muda o checksum e quebra a validação.
     baseline-on-migrate: true
 
+  # SMTP para os códigos de verificação; host e credenciais vêm do ambiente (vazios por padrão).
   mail:
     host: ${SMTP_HOST:}
     port: ${SMTP_PORT:587}
@@ -42,17 +50,23 @@ spring:
 
 server:
   port: ${SERVER_PORT:8080}
+  # Nunca expor stack trace nas respostas de erro.
   error:
     include-stacktrace: never
     include-message: always
 
 careidoso:
+  # Segredo e validades dos tokens. JWT_SECRET é obrigatório (Base64, mínimo 256 bits) e não tem valor padrão por segurança.
   jwt:
     secret: ${JWT_SECRET:}
+    # Access token curto (padrão 1 hora): limita a janela de uso de um token vazado ou de um usuário já desativado.
     access-expiration-ms: ${JWT_ACCESS_EXPIRATION_MS:3600000}
+    # Refresh token com rotação (padrão 1 dia).
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:86400000}
+  # Raiz do armazenamento local de fotos; precisa de volume persistente e fora do diretório público.
   upload:
     dir: ${UPLOAD_DIR:./uploads}
+  # Origens permitidas, separadas por vírgula; em produção, somente o domínio HTTPS do frontend.
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
   email:

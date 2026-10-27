@@ -5,9 +5,16 @@ import { MessageService } from 'primeng/api';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { AtualizarPerfilRequest, Usuario } from '../../../../core/models/usuario.model';
 
+/** Limites espelham a validação do backend (JPG/PNG até 2 MB); aqui só poupa uma ida à API. */
 const TIPOS_FOTO = ['image/jpeg', 'image/png'];
 const TAMANHO_MAXIMO_FOTO = 2 * 1024 * 1024;
 
+/**
+ * Área de perfil: edição de nome/e-mail/senha e upload da foto.
+ * A troca de senha só é enviada se `novaSenha` for preenchida, e então
+ * `senhaAtual` é obrigatória (validador de grupo). Ao salvar, `AuthService`
+ * atualiza o token e o usuário global (reflete no avatar do shell).
+ */
 @Component({
   selector: 'app-perfil',
   templateUrl: './perfil.component.html',
@@ -76,6 +83,7 @@ export class PerfilComponent implements OnInit {
     });
   }
 
+  /** Valida tipo/tamanho e envia a foto. Limpa o input para permitir reescolher o mesmo arquivo. */
   aoEscolherFoto(evento: Event): void {
     const input = evento.target as HTMLInputElement;
     const arquivo = input.files?.[0];
@@ -107,11 +115,13 @@ export class PerfilComponent implements OnInit {
     });
   }
 
+  /** Exibe erro de validação só após interação do usuário. */
   mostrarErro(campo: string): boolean {
     const controle = this.form.get(campo);
     return !!controle && controle.invalid && (controle.touched || controle.dirty);
   }
 
+  /** Exige a senha atual quando há nova senha. */
   private senhaAtualObrigatoria(grupo: AbstractControl): ValidationErrors | null {
     const nova = grupo.get('novaSenha')?.value;
     const atual = grupo.get('senhaAtual')?.value;

@@ -19,6 +19,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Regras dos fluxos de autenticação: login, renovação/revogação de tokens,
+ * recuperação de senha e auto-cadastro com ativação por código.
+ *
+ * Princípios de segurança: mensagens de erro de login não distinguem e-mail
+ * inexistente de senha errada; a solicitação de recuperação de senha responde igual
+ * para contas inexistentes; senhas só são gravadas com BCrypt.
+ */
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -30,6 +38,13 @@ public class AuthService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * Valida as credenciais e emite access token (JWT) + refresh token (novo registro
+     * no banco). Conta inativa não autentica ({@code DisabledException} do provider),
+     * hoje sem handler específico (cai no 500 genérico).
+     *
+     * @throws BadCredentialsException para qualquer falha de credencial, com mensagem única
+     */
     @Transactional
     public LoginResponse login(LoginRequest request) {
         try {
@@ -58,6 +73,10 @@ public class AuthService {
         );
     }
 
+    /**
+     * Rotaciona o refresh token (o enviado é invalidado e um novo é emitido) e gera
+     * novo access token. Reuso de token já utilizado é rejeitado.
+     */
     @Transactional
     public RefreshTokenResponse refresh(String refreshTokenBruto) {
         RefreshTokenService.ResultadoRenovacao resultado = refreshTokenService.renovar(refreshTokenBruto);
@@ -67,11 +86,20 @@ public class AuthService {
         return new RefreshTokenResponse(novoAccessToken, resultado.novoRefreshToken(), "Bearer");
     }
 
+    /**
+     * Invalida o refresh token informado; token desconhecido é ignorado (idempotente).
+     */
     @Transactional
     public void logout(String refreshTokenBruto) {
         refreshTokenService.revogar(refreshTokenBruto);
     }
 
+    /**
+     * Envia código {@code ESQUECI_SENHA} se existir conta ativa para o e-mail.
+     * Retorna silenciosamente quando não existe ou está inativa, para não revelar
+     * quais e-mails estão cadastrados. Pode lançar erro de cooldown/envio do
+     * {@code CodigoVerificacaoService}.
+     */
     @Transactional
     public void solicitarRedefinicaoSenha(String email) {
         Usuario usuario = usuarioRepository.findByEmail(email).orElse(null);
@@ -83,11 +111,23 @@ public class AuthService {
         codigoVerificacaoService.gerarEEnviar(email, TipoCodigoVerificacao.ESQUECI_SENHA);
     }
 
+    /**
+     * Consome o código informado (uso único). Quem chama define o próximo passo.
+     */
     @Transactional
     public void validarCodigo(String email, String codigo, TipoCodigoVerificacao tipo) {
         codigoVerificacaoService.validar(email, codigo, tipo);
     }
 
+    /**
+     * Troca a senha e revoga todos os refresh tokens do usuário (sessões abertas
+     * precisam logar de novo).
+     *
+     * Atenção: o código não é revalidado aqui. O {@code /validar-codigo} anterior já o
+     * consome, então esta operação confia no fluxo do frontend; o backend por si só não
+     * prova que quem chama possui o código. Candidato a reforço (ex.: token de
+     * redefinição emitido após a validação).
+     */
     @Transactional
     public void redefinirSenha(RedefinirSenhaRequest request) {
         Usuario usuario = usuarioRepository.findByEmail(request.email())
@@ -98,6 +138,15 @@ public class AuthService {
         refreshTokenService.revogarTodosDoUsuario(usuario.getId());
     }
 
+    /**
+     * Auto-cadastro: cria o usuário INATIVO (ou reaproveita/atualiza um cadastro ainda
+     * inativo para o mesmo e-mail) e envia o código {@code NOVA_CONTA}. A conta só
+     * passa a autenticar após {@link #ativarNovaConta}.
+     *
+     * Erro se já existe conta ATIVA com o e-mail. Perfil omitido vira CUIDADORA.
+     * Segurança: este endpoint é público e aceita {@code perfil}; é preciso restringir
+     * a CUIDADORA no cadastro público para impedir autoelevação a ADMIN.
+     */
     @Transactional
     public void solicitarNovaConta(NovaContaRequest request) {
         usuarioRepository.findByEmail(request.email()).ifPresent(usuario -> {
@@ -131,6 +180,9 @@ public class AuthService {
         codigoVerificacaoService.gerarEEnviar(request.email(), TipoCodigoVerificacao.NOVA_CONTA);
     }
 
+    /**
+     * Consome o código {@code NOVA_CONTA} e marca a conta como ativa.
+     */
     @Transactional
     public void ativarNovaConta(String email, String codigo) {
         codigoVerificacaoService.validar(email, codigo, TipoCodigoVerificacao.NOVA_CONTA);

@@ -1,4 +1,5 @@
 spring:
+  # Valores padrão apenas para desenvolvimento local; em outros ambientes use variáveis de ambiente.
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:careidoso}
     username: ${DB_USERNAME:careidoso}
@@ -6,8 +7,10 @@ spring:
     driver-class-name: org.postgresql.Driver
 
   jpa:
+    # Somente dev: SQL visível no console (nunca em produção, pode expor dados).
     show-sql: true
 
+# Logs detalhados apenas em dev; DEBUG de segurança pode expor detalhes de autenticação.
 logging:
   level:
     org.springframework.security: DEBUG

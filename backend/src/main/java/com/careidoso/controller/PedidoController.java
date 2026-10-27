@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Pedidos de reposição de medicamentos/produtos feitos por cuidadoras. A solicitante vem do token. Acesso a qualquer usuário autenticado.
+ */
 @RestController
 @RequestMapping("/api/pedidos")
 @RequiredArgsConstructor

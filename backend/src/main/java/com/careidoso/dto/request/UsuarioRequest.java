@@ -6,6 +6,15 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Criação de usuário por um administrador.
+ *
+ * @param nome   obrigatório, 3 a 120 caracteres
+ * @param email  obrigatório, formato válido, até 120 caracteres
+ * @param senha  obrigatória, 6 a 100 caracteres (sem exigência de complexidade, ao contrário do auto-cadastro)
+ * @param perfil obrigatório
+ * @param ativo  opcional; nulo assume {@code true}
+ */
 public record UsuarioRequest(
         @NotBlank(message = "O nome é obrigatório.")
         @Size(min = 3, max = 120, message = "O nome deve ter entre {min} e {max} caracteres.")

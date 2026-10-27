@@ -10,6 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * Catálogo de medicamentos com estoque atual.
+ */
 @Service
 @RequiredArgsConstructor
 public class MedicamentoService {
@@ -36,6 +39,9 @@ public class MedicamentoService {
                 .toList();
     }
 
+    /**
+     * @throws IllegalArgumentException se não existir
+     */
     @Transactional(readOnly = true)
     public MedicamentoResponse buscarPorId(Long id) {
         Medicamento medicamento = medicamentoRepository.findById(id)

@@ -19,6 +19,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+/**
+ * Gestão de usuários. Regras de acesso definidas em {@code SecurityConfig}:
+ * {@code /api/usuarios/me/**} para qualquer usuário autenticado (apenas o próprio
+ * perfil); demais rotas, somente ADMIN.
+ */
 @RestController
 @RequestMapping("/api/usuarios")
 @RequiredArgsConstructor
@@ -26,11 +31,18 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
+    /**
+     * Cria usuário com perfil e estado definidos pelo administrador (ADMIN).
+     * E-mail duplicado: 400.
+     */
     @PostMapping
     public ResponseEntity<UsuarioResponse> criar(@RequestBody @Valid UsuarioRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.criar(request));
     }
 
+    /**
+     * Lista todos os usuários (ADMIN). A resposta não inclui a senha.
+     */
     @GetMapping
     public ResponseEntity<List<UsuarioResponse>> listar() {
         return ResponseEntity.ok(usuarioService.listar());
@@ -38,23 +50,40 @@ public class UsuarioController {
 
     // Endpoints /me operam sempre sobre o usuário do token; nunca recebem id.
 
+    /**
+     * Dados do usuário autenticado.
+     */
     @GetMapping("/me")
     public ResponseEntity<UsuarioResponse> meuPerfil(Authentication authentication) {
         return ResponseEntity.ok(usuarioService.obterPerfil(authentication.getName()));
     }
 
+    /**
+     * Atualização parcial do próprio perfil. Devolve novo access token porque nome e
+     * e-mail (claims do token) podem ter mudado.
+     */
     @PutMapping("/me")
     public ResponseEntity<PerfilResponse> atualizarMeuPerfil(Authentication authentication,
                                                              @RequestBody @Valid AtualizarPerfilRequest request) {
         return ResponseEntity.ok(usuarioService.atualizarPerfil(authentication.getName(), request));
     }
 
+    /**
+     * Upload da foto de perfil (multipart, campo {@code arquivo}, JPG/PNG até 2 MB).
+     * O conteúdo é validado no servidor; ver {@code FotoStorageService}.
+     */
     @PostMapping(value = "/me/foto", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<UsuarioResponse> enviarMinhaFoto(Authentication authentication,
                                                            @RequestParam("arquivo") MultipartFile arquivo) {
         return ResponseEntity.ok(usuarioService.atualizarFoto(authentication.getName(), arquivo));
     }
 
+    /**
+     * Entrega a foto do próprio usuário (404 se não houver). Servida pela API, e não
+     * como arquivo estático, para exigir autenticação. {@code nosniff} impede que o
+     * navegador reinterprete o conteúdo e {@code private, no-cache} evita cache em
+     * proxies compartilhados.
+     */
     @GetMapping("/me/foto")
     public ResponseEntity<Resource> minhaFoto(Authentication authentication) {
         Resource foto = usuarioService.carregarFoto(authentication.getName());

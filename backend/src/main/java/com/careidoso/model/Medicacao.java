@@ -9,6 +9,9 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
+/**
+ * Registro de uma medicação efetivamente administrada a um idoso por uma cuidadora.
+ */
 @Entity
 @Table(name = "medicacoes")
 @Getter
@@ -33,11 +36,17 @@ public class Medicacao {
     @JoinColumn(name = "medicamento_id", nullable = false)
     private Medicamento medicamento;
 
+    /**
+     * Dosagem realmente administrada (pode diferir da dosagem padrão do medicamento).
+     */
     @NotBlank(message = "A dosagem administrada é obrigatória.")
     @Size(max = 50, message = "A dosagem administrada deve ter no máximo {max} caracteres.")
     @Column(name = "dosagem_admin", nullable = false, length = 50)
     private String dosagemAdmin;
 
+    /**
+     * Horário da administração, informado pela cuidadora (hora local, sem fuso).
+     */
     @NotNull(message = "O horário da medicação é obrigatório.")
     @Column(name = "horario", nullable = false)
     private LocalDateTime horario;
@@ -50,6 +59,9 @@ public class Medicacao {
     @Column(length = 1000)
     private String observacao;
 
+    /**
+     * Responsável pelo registro; definida no servidor a partir do token.
+     */
     @NotNull(message = "A cuidadora responsável é obrigatória.")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cuidadora_id", nullable = false)

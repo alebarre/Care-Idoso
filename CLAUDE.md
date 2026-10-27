@@ -17,6 +17,8 @@ Sempre que for trabalhar em um arquivo, carregue a skill correspondente:
 - Segurança → `care-security`
 - Docker/Postgres/Flyway → `care-docker`
 
+Siga o padrão de comentários de `.claude/rules/comentarios.md` em todo código novo ou alterado (JavaDoc no backend, TSDoc no frontend).
+
 Use também as skills globais `angular-best-practices` e `angular-best-practices-primeng` como referência complementar. Quando houver conflito, prevalecem as regras deste projeto (`care-*`).
 
 ## Regras transversais

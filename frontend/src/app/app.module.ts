@@ -15,6 +15,10 @@ import { CorrelationIdInterceptor } from './core/interceptors/correlation-id.int
 import { HttpErrorLoggingInterceptor } from './core/interceptors/http-error-logging.interceptor';
 import { AppErrorHandler } from './core/handlers/app-error-handler';
 
+/**
+ * Módulo raiz. Declara apenas o shell; funcionalidades são carregadas sob demanda
+ * (lazy) via `AppRoutingModule`.
+ */
 @NgModule({
   declarations: [
     AppComponent,
@@ -28,6 +32,7 @@ import { AppErrorHandler } from './core/handlers/app-error-handler';
     SharedModule
   ],
   providers: [
+    // Tema PrimeNG Aura; o modo escuro só é ativado com a classe `.p-dark` (não segue o SO).
     providePrimeNG({
       theme: {
         preset: Aura,
@@ -36,6 +41,7 @@ import { AppErrorHandler } from './core/handlers/app-error-handler';
         }
       }
     }),
+    // Ordem importa: correlation id -> JWT (inclui refresh) -> log de erro HTTP.
     { provide: HTTP_INTERCEPTORS, useClass: CorrelationIdInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: HttpErrorLoggingInterceptor, multi: true },

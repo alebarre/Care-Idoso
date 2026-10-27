@@ -4,6 +4,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Registro de observação. A autora vem do token.
+ *
+ * @param idosoId obrigatório; deve existir
+ * @param texto   obrigatório, até 3000 caracteres
+ */
 public record ObservacaoRequest(
         @NotNull(message = "O idoso é obrigatório.")
         Long idosoId,
