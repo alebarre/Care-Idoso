@@ -17,8 +17,8 @@ import org.springframework.stereotype.Component;
  * explicitamente com o profile "cadastrar-usuario" e os dados via variáveis de
  * ambiente (a senha não vai em argumento de linha de comando nem em arquivo).
  *
- * Segurança: o hash BCrypt gerado é escrito no log ao final; trate esse log como
- * sensível e não o compartilhe.
+ * Segurança: nem a senha nem o hash BCrypt são escritos no log; apenas o e-mail
+ * mascarado e o perfil.
  *
  * Exemplo de execução:
  *   NOVO_USUARIO_NOME="Maria Cuidadora" \
@@ -69,7 +69,6 @@ public class CadastrarUsuarioRunner implements CommandLineRunner {
         usuarioRepository.save(usuario);
 
         log.info("Usuário cadastrado com sucesso: {} ({})", LogSanitizer.mascararEmail(email), perfil.name());
-        log.info("Hash da senha gerado (BCrypt): {}", hashSenha);
     }
 
     /**
