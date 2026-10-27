@@ -65,7 +65,7 @@ class AuthServiceTest {
     void novaContaNaoAlteraPerfilDeCadastroInativoExistente() {
         when(passwordEncoder.encode(any())).thenReturn("hash");
         Usuario existente = Usuario.builder().nome("Admin").email("adm@exemplo.com")
-                .senha("x").perfil(Perfil.ADMIN).ativo(false).build();
+                .senha("x").perfil(Perfil.ADMIN).ativo(false).cadastroConfirmado(false).build();
         when(usuarioRepository.findByEmail("adm@exemplo.com")).thenReturn(Optional.of(existente));
 
         authService.solicitarNovaConta(new NovaContaRequest("Outro Nome", "adm@exemplo.com", "abc123"));
@@ -131,5 +131,50 @@ class AuthServiceTest {
                 () -> authService.login(new LoginRequest("i@exemplo.com", "errada1")));
 
         assertEquals("E-mail ou senha inválidos.", ex.getMessage());
+    }
+
+    @Test
+    void autoCadastroNaoReativaContaDesativadaPeloAdmin() {
+        Usuario desativado = Usuario.builder().nome("Maria").email("m@exemplo.com").senha("hash-original")
+                .perfil(Perfil.CUIDADORA).ativo(false).build(); // cadastroConfirmado = true (padrão)
+        when(usuarioRepository.findByEmail("m@exemplo.com")).thenReturn(Optional.of(desativado));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> authService.solicitarNovaConta(new NovaContaRequest("Maria Silva", "m@exemplo.com", "abc123")));
+
+        assertEquals("hash-original", desativado.getSenha());
+        verify(usuarioRepository, never()).save(any());
+        verify(codigoVerificacaoService, never()).gerarEEnviar(any(), any());
+    }
+
+    @Test
+    void autoCadastroReenviaParaCadastroAindaNaoConfirmado() {
+        when(passwordEncoder.encode(any())).thenReturn("hash-novo");
+        Usuario pendente = Usuario.builder().nome("Ana").email("a@exemplo.com").senha("antigo")
+                .perfil(Perfil.CUIDADORA).ativo(false).cadastroConfirmado(false).build();
+        when(usuarioRepository.findByEmail("a@exemplo.com")).thenReturn(Optional.of(pendente));
+
+        authService.solicitarNovaConta(new NovaContaRequest("Ana Souza", "a@exemplo.com", "abc123"));
+
+        assertEquals("hash-novo", pendente.getSenha());
+        verify(codigoVerificacaoService).gerarEEnviar("a@exemplo.com", TipoCodigoVerificacao.NOVA_CONTA);
+    }
+
+    @Test
+    void ativarNovaContaSoAtivaCadastroPendente() {
+        Usuario desativado = Usuario.builder().email("m@exemplo.com").senha("h")
+                .perfil(Perfil.CUIDADORA).ativo(false).build();
+        when(usuarioRepository.findByEmail("m@exemplo.com")).thenReturn(Optional.of(desativado));
+
+        assertThrows(IllegalArgumentException.class, () -> authService.ativarNovaConta("m@exemplo.com", "123456"));
+        assertEquals(false, desativado.getAtivo());
+
+        Usuario pendente = Usuario.builder().email("p@exemplo.com").senha("h")
+                .perfil(Perfil.CUIDADORA).ativo(false).cadastroConfirmado(false).build();
+        when(usuarioRepository.findByEmail("p@exemplo.com")).thenReturn(Optional.of(pendente));
+
+        authService.ativarNovaConta("p@exemplo.com", "123456");
+        assertEquals(true, pendente.getAtivo());
+        assertEquals(true, pendente.getCadastroConfirmado());
     }
 }

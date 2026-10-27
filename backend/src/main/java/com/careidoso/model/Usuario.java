@@ -79,6 +79,15 @@ public class Usuario {
     private Boolean ativo = true;
 
     /**
+     * FALSE enquanto um cadastro público aguarda a confirmação do código por e-mail. Só
+     * cadastros não confirmados podem ser reaproveitados pelo auto-cadastro; uma conta
+     * confirmada e inativa foi desativada pelo ADMIN e não volta por esse caminho.
+     */
+    @Column(name = "cadastro_confirmado", nullable = false)
+    @Builder.Default
+    private Boolean cadastroConfirmado = true;
+
+    /**
      * Exclusão lógica: a linha fica por causa das FKs de medicações, medições, observações
      * e pedidos. Usuário excluído também é inativado e tem o e-mail anonimizado (libera o
      * e-mail original e impede qualquer login).

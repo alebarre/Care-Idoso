@@ -159,54 +159,57 @@ public class AuthService {
     }
 
     /**
-     * Auto-cadastro: cria o usuário INATIVO (ou reaproveita/atualiza um cadastro ainda
-     * inativo para o mesmo e-mail) e envia o código {@code NOVA_CONTA}. A conta só
-     * passa a autenticar após {@link #ativarNovaConta}.
+     * Auto-cadastro: cria o usuário INATIVO e ainda não confirmado (ou reaproveita um
+     * cadastro não confirmado do mesmo e-mail) e envia o código {@code NOVA_CONTA}. A conta
+     * só passa a autenticar após {@link #ativarNovaConta}.
      *
-     * Erro se já existe conta ATIVA com o e-mail. O perfil é sempre CUIDADORA e nunca
-     * é alterado ao reaproveitar um cadastro inativo: o endpoint é público e aceitar o
-     * perfil do cliente permitiria autoelevação a ADMIN.
+     * Erro se já existe conta ATIVA com o e-mail, ou se a conta foi desativada pelo ADMIN
+     * (inativa e já confirmada): o auto-cadastro não pode contornar esse bloqueio. O perfil
+     * é sempre CUIDADORA e nunca é alterado ao reaproveitar um cadastro: o endpoint é
+     * público e aceitar o perfil do cliente permitiria autoelevação a ADMIN.
      */
     @Transactional
     public void solicitarNovaConta(NovaContaRequest request) {
-        usuarioRepository.findByEmail(request.email()).ifPresent(usuario -> {
-            if (Boolean.TRUE.equals(usuario.getAtivo())) {
+        Usuario existente = usuarioRepository.findByEmail(request.email()).orElse(null);
+
+        if (existente != null) {
+            if (Boolean.TRUE.equals(existente.getAtivo())) {
                 throw new IllegalArgumentException("E-mail já cadastrado.");
             }
-        });
-
-        Usuario usuario = usuarioRepository.findByEmail(request.email())
-                .orElseGet(() -> {
-                    Usuario novo = Usuario.builder()
-                            .nome(request.nome())
-                            .email(request.email())
-                            .senha(passwordEncoder.encode(request.senha()))
-                            .perfil(Perfil.CUIDADORA)
-                            .ativo(false)
-                            .build();
-                    return usuarioRepository.save(novo);
-                });
-
-        if (!Boolean.TRUE.equals(usuario.getAtivo())) {
-            usuario.setNome(request.nome());
-            usuario.setSenha(passwordEncoder.encode(request.senha()));
-            usuarioRepository.save(usuario);
+            if (Boolean.TRUE.equals(existente.getCadastroConfirmado())) {
+                throw new IllegalArgumentException("Esta conta está desativada. Procure o administrador.");
+            }
+            existente.setNome(request.nome());
+            existente.setSenha(passwordEncoder.encode(request.senha()));
+            usuarioRepository.save(existente);
+        } else {
+            usuarioRepository.save(Usuario.builder()
+                    .nome(request.nome())
+                    .email(request.email())
+                    .senha(passwordEncoder.encode(request.senha()))
+                    .perfil(Perfil.CUIDADORA)
+                    .ativo(false)
+                    .cadastroConfirmado(false)
+                    .build());
         }
 
         codigoVerificacaoService.gerarEEnviar(request.email(), TipoCodigoVerificacao.NOVA_CONTA);
     }
 
     /**
-     * Consome o código {@code NOVA_CONTA} e marca a conta como ativa.
+     * Consome o código {@code NOVA_CONTA} e ativa o cadastro pendente. Uma conta já
+     * confirmada (por exemplo, desativada pelo ADMIN) não é ativada por aqui.
      */
     @Transactional
     public void ativarNovaConta(String email, String codigo) {
         codigoVerificacaoService.validar(email, codigo, TipoCodigoVerificacao.NOVA_CONTA);
 
         Usuario usuario = usuarioRepository.findByEmail(email)
+                .filter(u -> Boolean.FALSE.equals(u.getCadastroConfirmado()))
                 .orElseThrow(() -> new IllegalArgumentException("Conta não encontrada."));
 
         usuario.setAtivo(true);
+        usuario.setCadastroConfirmado(true);
         usuarioRepository.save(usuario);
     }
 }
