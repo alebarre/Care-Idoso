@@ -84,6 +84,24 @@ As migrations do Flyway são executadas automaticamente na inicialização:
 
 - `V1__estrutura_inicial.sql`: cria todas as tabelas.
 - `V2__dados_iniciais.sql`: insere idoso, medicamentos e lembretes de exemplo.
+- `V3`/`V4`: códigos de verificação (OTP) e ajuste para `TIMESTAMPTZ`.
+- `V5__refresh_tokens.sql`: refresh tokens com rotação.
+- `V6__usuario_foto_perfil.sql`: campo `foto` em `usuarios`.
+- `V7__codigos_verificacao_endurecimento.sql`: OTP de 6 dígitos e contador de tentativas.
+- `V8__usuario_exclusao_logica.sql`: campo `excluido` (exclusão lógica de usuários).
+
+Nunca altere uma migration já aplicada (o Flyway valida o checksum, comentários inclusos): crie uma nova versão.
+
+#### Fotos de perfil (`UPLOAD_DIR`)
+
+As fotos de perfil (JPG/PNG, até 2 MB) são gravadas em disco, em `UPLOAD_DIR/fotos` (padrão `./uploads`, relativo ao diretório de execução do backend); o banco guarda apenas o nome do arquivo. O diretório é ignorado pelo Git.
+
+Em produção:
+
+- Aponte `UPLOAD_DIR` para um caminho **fora do código e persistente** (volume Docker ou disco montado). Sem isso as fotos somem a cada novo deploy/contêiner.
+- O usuário do processo precisa de permissão de leitura e escrita nesse diretório; ninguém mais deve ter acesso.
+- Inclua o diretório na rotina de backup junto com o banco: banco e arquivos precisam ser restaurados da mesma data.
+- As fotos não são servidas publicamente: só passam pelo backend, com JWT.
 
 ### 3. Frontend
 
@@ -121,7 +139,8 @@ Os usuários abaixo são criados automaticamente pelo `SeedRunner` ao iniciar o 
 | Recurso                | Endpoint                 | Métodos principais |
 |------------------------|--------------------------|--------------------|
 | Autenticação           | `/api/auth/login`        | POST               |
-| Usuários               | `/api/usuarios`          | GET, POST          |
+| Usuários (ADMIN)       | `/api/usuarios`, `/api/usuarios/{id}`, `/api/usuarios/{id}/status` | GET, POST, PUT, PATCH, DELETE |
+| Meu perfil             | `/api/usuarios/me`, `/api/usuarios/me/foto` | GET, PUT, POST |
 | Idosos                 | `/api/idosos`            | GET, POST          |
 | Medicamentos           | `/api/medicamentos`      | GET, POST          |
 | Medicações             | `/api/medicacoes`        | GET, POST          |
