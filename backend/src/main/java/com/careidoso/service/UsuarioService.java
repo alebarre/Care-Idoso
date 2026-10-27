@@ -1,6 +1,7 @@
 package com.careidoso.service;
 
 import com.careidoso.dto.request.AtualizarPerfilRequest;
+import com.careidoso.dto.request.AtualizarUsuarioRequest;
 import com.careidoso.dto.request.UsuarioRequest;
 import com.careidoso.dto.response.PerfilResponse;
 import com.careidoso.dto.response.UsuarioResponse;
@@ -35,6 +36,7 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final FotoStorageService fotoStorageService;
+    private final RefreshTokenService refreshTokenService;
 
     /**
      * Rota autenticada que serve a foto do usuário logado.
@@ -99,7 +101,7 @@ public class UsuarioService {
      */
     @Transactional(readOnly = true)
     public List<UsuarioResponse> listar() {
-        return usuarioRepository.findAll().stream()
+        return usuarioRepository.findAllByExcluidoFalseOrderByNomeAsc().stream()
                 .map(this::toResponse)
                 .toList();
     }
@@ -107,6 +109,100 @@ public class UsuarioService {
     /**
      * Perfil do usuário identificado pelo e-mail do token.
      */
+    @Transactional(readOnly = true)
+    public UsuarioResponse obter(Long id) {
+        return toResponse(buscarNaoExcluido(id));
+    }
+
+    /**
+     * Edita nome, e-mail e perfil de um usuário (ação de ADMIN). O ADMIN não pode alterar
+     * o próprio perfil (evita ficar sem administradores). Mudar o perfil revoga os refresh
+     * tokens do usuário, para o novo papel valer no próximo login.
+     *
+     * @throws IllegalArgumentException usuário inexistente, e-mail em uso ou tentativa de
+     *         alterar o próprio perfil
+     */
+    @Transactional
+    public UsuarioResponse atualizar(Long id, AtualizarUsuarioRequest request, String emailAdmin) {
+        Usuario usuario = buscarNaoExcluido(id);
+
+        if (ehOMesmoUsuario(usuario, emailAdmin) && request.perfil() != usuario.getPerfil()) {
+            throw new IllegalArgumentException("Você não pode alterar o seu próprio perfil de acesso.");
+        }
+        if (usuarioRepository.existsByEmailAndIdNot(request.email(), id)) {
+            throw new IllegalArgumentException("E-mail já cadastrado.");
+        }
+
+        boolean perfilMudou = request.perfil() != usuario.getPerfil();
+        usuario.setNome(request.nome().trim());
+        usuario.setEmail(request.email().trim());
+        usuario.setPerfil(request.perfil());
+        usuarioRepository.save(usuario);
+
+        if (perfilMudou) {
+            refreshTokenService.revogarTodosDoUsuario(usuario.getId());
+        }
+        log.info("Usuário {} atualizado por admin {}", usuario.getId(), LogSanitizer.mascararEmail(emailAdmin));
+        return toResponse(usuario);
+    }
+
+    /**
+     * Ativa ou desativa um usuário. Desativar revoga os refresh tokens; o {@code JwtFilter}
+     * já recusa o access token de conta inativa. Um ADMIN não pode desativar a si mesmo.
+     */
+    @Transactional
+    public UsuarioResponse alterarStatus(Long id, boolean ativo, String emailAdmin) {
+        Usuario usuario = buscarNaoExcluido(id);
+
+        if (!ativo && ehOMesmoUsuario(usuario, emailAdmin)) {
+            throw new IllegalArgumentException("Você não pode desativar a sua própria conta.");
+        }
+
+        usuario.setAtivo(ativo);
+        usuarioRepository.save(usuario);
+        if (!ativo) {
+            refreshTokenService.revogarTodosDoUsuario(usuario.getId());
+        }
+        log.info("Usuário {} {} por admin {}", usuario.getId(), ativo ? "ativado" : "desativado",
+                LogSanitizer.mascararEmail(emailAdmin));
+        return toResponse(usuario);
+    }
+
+    /**
+     * Exclusão lógica: inativa, marca como excluído, anonimiza o e-mail (libera o original
+     * para novo cadastro e impede login) e revoga os refresh tokens. O registro permanece
+     * porque medicações, medições, observações e pedidos o referenciam.
+     */
+    @Transactional
+    public void excluir(Long id, String emailAdmin) {
+        Usuario usuario = buscarNaoExcluido(id);
+
+        if (ehOMesmoUsuario(usuario, emailAdmin)) {
+            throw new IllegalArgumentException("Você não pode excluir a sua própria conta.");
+        }
+
+        String foto = usuario.getFoto();
+        usuario.setAtivo(false);
+        usuario.setExcluido(true);
+        usuario.setEmail("excluido-" + usuario.getId() + "@removido.invalid");
+        usuario.setFoto(null);
+        usuarioRepository.save(usuario);
+        refreshTokenService.revogarTodosDoUsuario(usuario.getId());
+        if (foto != null) {
+            fotoStorageService.remover(foto);
+        }
+        log.info("Usuário {} excluído por admin {}", usuario.getId(), LogSanitizer.mascararEmail(emailAdmin));
+    }
+
+    private Usuario buscarNaoExcluido(Long id) {
+        return usuarioRepository.findByIdAndExcluidoFalse(id)
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
+    }
+
+    private boolean ehOMesmoUsuario(Usuario usuario, String email) {
+        return usuario.getEmail().equalsIgnoreCase(email);
+    }
+
     @Transactional(readOnly = true)
     public UsuarioResponse obterPerfil(String emailAutenticado) {
         return toResponse(buscarPorEmail(emailAutenticado));

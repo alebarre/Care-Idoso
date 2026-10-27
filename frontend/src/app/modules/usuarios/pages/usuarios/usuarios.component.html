@@ -1,19 +1,146 @@
 <div class="page-screen">
   <header class="page-header">
-    <a routerLink="/" class="icon-button" aria-label="Voltar">
+    <a *ngIf="!editando" routerLink="/" class="icon-button" aria-label="Voltar">
       <fa-icon [icon]="['fas', 'arrow-left']"></fa-icon>
     </a>
-    <h1 class="heading-md">Usuários</h1>
-    <div class="icon-placeholder"></div>
+    <button *ngIf="editando" type="button" class="icon-button" (click)="fecharFormulario()" aria-label="Voltar para a lista">
+      <fa-icon [icon]="['fas', 'arrow-left']"></fa-icon>
+    </button>
+    <h1 class="heading-md">{{ !editando ? 'Usuários' : (ehNovo ? 'Novo usuário' : 'Editar usuário') }}</h1>
+    <button *ngIf="!editando" type="button" class="icon-button" (click)="abrirFormulario()" aria-label="Novo usuário">
+      <fa-icon [icon]="['fas', 'plus']"></fa-icon>
+    </button>
+    <div *ngIf="editando" class="icon-placeholder"></div>
   </header>
 
-  <section class="page-content">
-    <div class="uber-card uber-card--flat">
+  <!-- Lista -->
+  <section class="page-content" *ngIf="!editando">
+    <div class="uber-field">
+      <label class="uber-label" for="busca">Buscar</label>
+      <input id="busca" class="uber-input" type="search" [(ngModel)]="busca" placeholder="Nome, e-mail ou perfil" />
+    </div>
+
+    <div class="uber-card uber-card--flat" *ngIf="!carregando && filtrados.length === 0">
       <div class="empty-state">
         <fa-icon [icon]="['fas', 'users']" class="empty-state__icon"></fa-icon>
-        <p class="body-md">Lista de cuidadoras.</p>
-        <p class="body-sm">Módulo em construção.</p>
+        <p class="body-md">{{ usuarios.length === 0 ? 'Nenhum usuário cadastrado.' : 'Nenhum usuário encontrado.' }}</p>
+        <p class="body-sm">{{ usuarios.length === 0 ? 'Toque em + para cadastrar o primeiro.' : 'Tente outro termo de busca.' }}</p>
       </div>
     </div>
+
+    <p *ngIf="carregando" class="body-sm usuarios__carregando">Carregando...</p>
+
+    <ul class="usuarios__lista" *ngIf="filtrados.length > 0">
+      <li class="usuario-item" *ngFor="let u of filtrados" [class.usuario-item--inativo]="!u.ativo">
+        <app-avatar [nome]="u.nome" [tamanho]="44"></app-avatar>
+
+        <div class="usuario-item__info">
+          <span class="usuario-item__nome">
+            {{ u.nome }}<span *ngIf="ehEu(u)" class="usuario-item__voce"> (você)</span>
+          </span>
+          <span class="usuario-item__email">{{ u.email }}</span>
+          <span class="usuario-item__tags">
+            <span class="usuario-tag">{{ u.perfil === 'ADMIN' ? 'Administrador' : 'Cuidadora' }}</span>
+            <span class="usuario-tag" [class.usuario-tag--inativo]="!u.ativo">{{ u.ativo ? 'Ativo' : 'Inativo' }}</span>
+          </span>
+        </div>
+
+        <div class="usuario-item__acoes">
+          <button type="button" class="icon-button" (click)="abrirFormulario(u)" [attr.aria-label]="'Editar ' + u.nome">
+            <fa-icon [icon]="['fas', 'pen']"></fa-icon>
+          </button>
+          <button
+            *ngIf="!ehEu(u)"
+            type="button"
+            class="icon-button"
+            (click)="alternarStatus(u)"
+            [attr.aria-label]="(u.ativo ? 'Desativar ' : 'Ativar ') + u.nome"
+          >
+            <fa-icon [icon]="['fas', u.ativo ? 'user-slash' : 'user-check']"></fa-icon>
+          </button>
+          <button
+            *ngIf="!ehEu(u)"
+            type="button"
+            class="icon-button"
+            (click)="pedirExclusao(u)"
+            [attr.aria-label]="'Excluir ' + u.nome"
+          >
+            <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+          </button>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <!-- Formulário de criação/edição -->
+  <section class="page-content usuarios__form-wrap" *ngIf="editando">
+    <form [formGroup]="form" (ngSubmit)="salvar()" class="usuarios__form" novalidate>
+      <div class="uber-field">
+        <label class="uber-label" for="u-nome">Nome</label>
+        <input id="u-nome" class="uber-input" type="text" formControlName="nome" />
+        <small class="usuarios__erro" *ngIf="form.get('nome')?.invalid && form.get('nome')?.touched">
+          Informe um nome com 3 a 120 caracteres.
+        </small>
+      </div>
+
+      <div class="uber-field">
+        <label class="uber-label" for="u-email">E-mail</label>
+        <input id="u-email" class="uber-input" type="email" formControlName="email" />
+        <small class="usuarios__erro" *ngIf="form.get('email')?.invalid && form.get('email')?.touched">
+          Informe um e-mail válido.
+        </small>
+      </div>
+
+      <div class="uber-field">
+        <label class="uber-label" for="u-perfil">Perfil</label>
+        <select id="u-perfil" class="uber-input" formControlName="perfil">
+          <option value="CUIDADORA">Cuidadora</option>
+          <option value="ADMIN">Administrador</option>
+        </select>
+      </div>
+
+      <div class="uber-field" *ngIf="ehNovo">
+        <label class="uber-label" for="u-senha">Senha</label>
+        <input id="u-senha" class="uber-input" type="password" formControlName="senha" autocomplete="new-password" />
+        <small class="usuarios__erro" *ngIf="form.get('senha')?.invalid && form.get('senha')?.touched">
+          A senha deve ter de 6 a 100 caracteres.
+        </small>
+      </div>
+
+      <button type="submit" class="uber-button" [disabled]="salvando">
+        {{ salvando ? 'Salvando...' : 'Salvar' }}
+      </button>
+    </form>
   </section>
 </div>
+
+<!-- Confirmação de ações destrutivas -->
+<p-dialog
+  [visible]="!!confirmacao"
+  (visibleChange)="cancelarConfirmacao()"
+  [modal]="true"
+  [draggable]="false"
+  [closable]="!processando"
+  [header]="confirmacao?.acao === 'excluir' ? 'Excluir usuário' : 'Desativar usuário'"
+  [style]="{ width: '90vw', maxWidth: '420px' }"
+>
+  <p class="body-md" *ngIf="confirmacao as c">
+    <ng-container *ngIf="c.acao === 'excluir'; else desativarTpl">
+      Excluir <strong>{{ c.usuario.nome }}</strong>? O cadastro será removido e o acesso, encerrado.
+      O histórico de registros feitos por esse usuário é mantido.
+    </ng-container>
+    <ng-template #desativarTpl>
+      Desativar <strong>{{ c.usuario.nome }}</strong>? O usuário perde o acesso imediatamente e as sessões abertas são encerradas.
+    </ng-template>
+  </p>
+  <div class="usuarios__dialogo-acoes">
+    <button type="button" class="uber-button uber-button--outline" (click)="cancelarConfirmacao()" [disabled]="processando">
+      Cancelar
+    </button>
+    <button type="button" class="uber-button" (click)="confirmar()" [disabled]="processando">
+      {{ processando ? 'Aguarde...' : (confirmacao?.acao === 'excluir' ? 'Excluir' : 'Desativar') }}
+    </button>
+  </div>
+</p-dialog>
+
+<p-toast></p-toast>

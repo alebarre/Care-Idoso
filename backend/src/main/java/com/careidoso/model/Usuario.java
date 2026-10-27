@@ -79,6 +79,15 @@ public class Usuario {
     private Boolean ativo = true;
 
     /**
+     * Exclusão lógica: a linha fica por causa das FKs de medicações, medições, observações
+     * e pedidos. Usuário excluído também é inativado e tem o e-mail anonimizado (libera o
+     * e-mail original e impede qualquer login).
+     */
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean excluido = false;
+
+    /**
      * Data de criação, preenchida automaticamente e imutável.
      */
     @CreationTimestamp

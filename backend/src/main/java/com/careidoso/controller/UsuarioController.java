@@ -1,6 +1,8 @@
 package com.careidoso.controller;
 
 import com.careidoso.dto.request.AtualizarPerfilRequest;
+import com.careidoso.dto.request.AtualizarUsuarioRequest;
+import com.careidoso.dto.request.StatusUsuarioRequest;
 import com.careidoso.dto.request.UsuarioRequest;
 import com.careidoso.dto.response.PerfilResponse;
 import com.careidoso.dto.response.UsuarioResponse;
@@ -46,6 +48,33 @@ public class UsuarioController {
     @GetMapping
     public ResponseEntity<List<UsuarioResponse>> listar() {
         return ResponseEntity.ok(usuarioService.listar());
+    }
+
+    // Gestão por ADMIN: todas as rotas /api/usuarios/** (exceto /me) exigem ADMIN em SecurityConfig.
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UsuarioResponse> obter(@PathVariable Long id) {
+        return ResponseEntity.ok(usuarioService.obter(id));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UsuarioResponse> atualizar(@PathVariable Long id,
+                                                     @RequestBody @Valid AtualizarUsuarioRequest request,
+                                                     Authentication authentication) {
+        return ResponseEntity.ok(usuarioService.atualizar(id, request, authentication.getName()));
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<UsuarioResponse> alterarStatus(@PathVariable Long id,
+                                                         @RequestBody @Valid StatusUsuarioRequest request,
+                                                         Authentication authentication) {
+        return ResponseEntity.ok(usuarioService.alterarStatus(id, request.ativo(), authentication.getName()));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(@PathVariable Long id, Authentication authentication) {
+        usuarioService.excluir(id, authentication.getName());
+        return ResponseEntity.noContent().build();
     }
 
     // Endpoints /me operam sempre sobre o usuário do token; nunca recebem id.

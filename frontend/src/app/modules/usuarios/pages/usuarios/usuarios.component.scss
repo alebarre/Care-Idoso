@@ -1,0 +1,112 @@
+.usuarios__carregando {
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.usuarios__lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.usuario-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background-color: var(--uber-gray-100);
+  border-radius: var(--radius-md);
+}
+
+.usuario-item--inativo {
+  opacity: 0.7;
+}
+
+.usuario-item__info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: var(--space-xs);
+}
+
+.usuario-item__nome {
+  font-weight: var(--font-weight-semibold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.usuario-item__voce,
+.usuario-item__email {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.usuario-item__email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.usuario-item__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.usuario-tag {
+  padding: 0 var(--space-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--uber-white);
+  background-color: var(--uber-black);
+  border-radius: var(--radius-full);
+}
+
+.usuario-tag--inativo {
+  background-color: var(--uber-gray-500);
+}
+
+/* Em telas estreitas as ações quebram para baixo do texto em vez de espremê-lo */
+.usuario-item__acoes {
+  display: flex;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+}
+
+@media (max-width: 479px) {
+  .usuario-item {
+    flex-wrap: wrap;
+  }
+
+  .usuario-item__acoes {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+.usuarios__form-wrap {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.usuarios__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.usuarios__erro {
+  color: #d32f2f;
+  font-size: var(--font-size-sm);
+}
+
+.usuarios__dialogo-acoes {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
