@@ -32,7 +32,7 @@
 
     <ul class="usuarios__lista" *ngIf="filtrados.length > 0">
       <li class="usuario-item" *ngFor="let u of filtrados" [class.usuario-item--inativo]="!u.ativo">
-        <app-avatar [nome]="u.nome" [tamanho]="44"></app-avatar>
+        <app-avatar [nome]="u.nome" [foto]="u.foto" [tamanho]="44"></app-avatar>
 
         <div class="usuario-item__info">
           <span class="usuario-item__nome">

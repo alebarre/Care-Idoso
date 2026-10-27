@@ -37,9 +37,10 @@ import java.util.List;
  *   header {@code Authorization}, que o navegador não anexa automaticamente.
  * - Sessão {@code STATELESS}: nada é guardado no servidor entre requisições.
  * - A ordem dos matchers importa (vale o primeiro que casar): as regras de
- *   {@code /api/usuarios/me} vêm antes das de {@code /api/usuarios/**} para que
- *   qualquer usuário autenticado edite o próprio perfil, enquanto a gestão de
- *   usuários fica restrita a ADMIN.
+ *   {@code /api/usuarios/me} e {@code GET /api/usuarios/{id}/foto} vêm antes das de
+ *   {@code /api/usuarios/**} para que qualquer usuário autenticado edite o próprio
+ *   perfil e veja a própria foto (a foto de terceiros é filtrada no service: só ADMIN),
+ *   enquanto a gestão de usuários fica restrita a ADMIN.
  * - Autorização é sempre reforçada no backend; o frontend só esconde telas.
  */
 @Configuration
@@ -78,6 +79,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/publico/**").permitAll()
                         .requestMatchers("/api/usuarios/me", "/api/usuarios/me/**").authenticated()
+                        // a checagem "próprio usuário ou ADMIN" é feita no UsuarioService
+                        .requestMatchers(HttpMethod.GET, "/api/usuarios/*/foto").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/usuarios/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/usuarios/**").hasRole("ADMIN")
                         .requestMatchers("/api/usuarios/**").hasRole("ADMIN")

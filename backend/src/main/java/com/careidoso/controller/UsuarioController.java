@@ -6,7 +6,6 @@ import com.careidoso.dto.request.StatusUsuarioRequest;
 import com.careidoso.dto.request.UsuarioRequest;
 import com.careidoso.dto.response.PerfilResponse;
 import com.careidoso.dto.response.UsuarioResponse;
-import com.careidoso.service.FotoStorageService;
 import com.careidoso.service.UsuarioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Gestão de usuários. Regras de acesso definidas em {@code SecurityConfig}:
@@ -109,21 +109,34 @@ public class UsuarioController {
 
     /**
      * Entrega a foto do próprio usuário (404 se não houver). Servida pela API, e não
-     * como arquivo estático, para exigir autenticação. {@code nosniff} impede que o
-     * navegador reinterprete o conteúdo e {@code private, no-cache} evita cache em
-     * proxies compartilhados.
+     * como arquivo estático, para exigir autenticação.
      */
     @GetMapping("/me/foto")
     public ResponseEntity<Resource> minhaFoto(Authentication authentication) {
-        Resource foto = usuarioService.carregarFoto(authentication.getName());
-        if (foto == null) {
-            return ResponseEntity.notFound().build();
-        }
-        String nome = usuarioService.nomeArquivoFoto(authentication.getName());
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(FotoStorageService.tipoMidia(nome)))
-                .header("X-Content-Type-Options", "nosniff")
-                .cacheControl(CacheControl.noCache().cachePrivate())
-                .body(foto);
+        return respostaFoto(usuarioService.buscarMinhaFoto(authentication.getName()));
+    }
+
+    /**
+     * Foto de um usuário: visível ao próprio usuário e a ADMIN. Para os demais responde
+     * 404 (igual a "sem foto"), sem confirmar que o usuário existe.
+     */
+    @GetMapping("/{id}/foto")
+    public ResponseEntity<Resource> fotoDoUsuario(@PathVariable Long id, Authentication authentication) {
+        boolean admin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        return respostaFoto(usuarioService.buscarFoto(id, authentication.getName(), admin));
+    }
+
+    /**
+     * {@code nosniff} impede que o navegador reinterprete o conteúdo e
+     * {@code private, no-cache} evita cache em proxies compartilhados.
+     */
+    private ResponseEntity<Resource> respostaFoto(Optional<UsuarioService.FotoArquivo> foto) {
+        return foto.map(f -> ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(f.tipoMidia()))
+                        .header("X-Content-Type-Options", "nosniff")
+                        .cacheControl(CacheControl.noCache().cachePrivate())
+                        .body(f.recurso()))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

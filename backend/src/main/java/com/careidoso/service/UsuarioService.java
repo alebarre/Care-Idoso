@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Regras de usuários: cadastro administrativo, consulta, edição do próprio perfil
@@ -39,14 +40,16 @@ public class UsuarioService {
     private final RefreshTokenService refreshTokenService;
 
     /**
-     * Rota autenticada que serve a foto do usuário logado.
+     * URL autenticada da foto do usuário ({@code GET /api/usuarios/{id}/foto}: o próprio
+     * usuário ou ADMIN), com o nome do arquivo como versão para o navegador não servir
+     * cache antigo. Nulo se não houver foto.
      */
-    public static final String URL_FOTO = "/api/usuarios/me/foto";
-
-    /** URL da foto com o nome do arquivo como versão, para o navegador não servir cache antigo. */
-    public static String urlFoto(String foto) {
-        return foto == null ? null : URL_FOTO + "?v=" + foto;
+    public static String urlFoto(Long usuarioId, String foto) {
+        return foto == null ? null : "/api/usuarios/" + usuarioId + "/foto?v=" + foto;
     }
+
+    /** Foto pronta para ser servida: o arquivo e o Content-Type derivado da extensão. */
+    public record FotoArquivo(Resource recurso, String tipoMidia) { }
 
     /**
      * Carrega o usuário para o Spring Security (login). Usado como
@@ -280,18 +283,24 @@ public class UsuarioService {
         return toResponse(usuario);
     }
 
-    /** Devolve a foto do próprio usuário, ou null se não houver. */
-    @Transactional(readOnly = true)
-    public Resource carregarFoto(String emailAutenticado) {
-        return fotoStorageService.carregar(buscarPorEmail(emailAutenticado).getFoto());
-    }
-
     /**
-     * Nome do arquivo da foto (usado para definir o Content-Type), ou nulo.
+     * Localiza a foto de um usuário para quem a pede. Só o próprio usuário e ADMIN
+     * enxergam a foto; qualquer outro caso (usuário inexistente, excluído, sem foto ou
+     * sem permissão) devolve vazio, sem distinguir os motivos, para não vazar existência.
      */
     @Transactional(readOnly = true)
-    public String nomeArquivoFoto(String emailAutenticado) {
-        return buscarPorEmail(emailAutenticado).getFoto();
+    public Optional<FotoArquivo> buscarFoto(Long id, String emailSolicitante, boolean solicitanteAdmin) {
+        return usuarioRepository.findByIdAndExcluidoFalse(id)
+                .filter(u -> solicitanteAdmin || ehOMesmoUsuario(u, emailSolicitante))
+                .filter(u -> u.getFoto() != null)
+                .flatMap(u -> Optional.ofNullable(fotoStorageService.carregar(u.getFoto()))
+                        .map(recurso -> new FotoArquivo(recurso, FotoStorageService.tipoMidia(u.getFoto()))));
+    }
+
+    /** Foto do próprio usuário autenticado (atalho de {@code /me/foto}). */
+    @Transactional(readOnly = true)
+    public Optional<FotoArquivo> buscarMinhaFoto(String emailAutenticado) {
+        return buscarFoto(buscarPorEmail(emailAutenticado).getId(), emailAutenticado, false);
     }
 
     /**
@@ -304,7 +313,7 @@ public class UsuarioService {
                 usuario.getEmail(),
                 usuario.getPerfil().name(),
                 usuario.getAtivo(),
-                urlFoto(usuario.getFoto())
+                urlFoto(usuario.getId(), usuario.getFoto())
         );
     }
 }

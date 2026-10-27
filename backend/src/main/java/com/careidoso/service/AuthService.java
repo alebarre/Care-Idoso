@@ -81,7 +81,7 @@ public class AuthService {
                 userDetails.getId(),
                 userDetails.getNome(),
                 userDetails.getPerfil().name(),
-                UsuarioService.urlFoto(usuario.getFoto())
+                UsuarioService.urlFoto(usuario.getId(), usuario.getFoto())
         );
     }
 

@@ -144,4 +144,28 @@ class UsuarioServiceTest {
         verify(refreshTokenService, never()).revogarTodosDoUsuario(any());
         assertEquals(null, resp.refreshToken());
     }
+
+    @Test
+    void fotoDeOutroUsuarioSoParaAdmin() {
+        when(fotoStorageService.carregar("f.jpg")).thenReturn(new org.springframework.core.io.ByteArrayResource(new byte[]{1}));
+
+        assertTrue(usuarioService.buscarFoto(2L, "admin@exemplo.com", true).isPresent());
+        assertTrue(usuarioService.buscarFoto(2L, "maria@exemplo.com", false).isPresent());
+        assertTrue(usuarioService.buscarFoto(2L, "outra@exemplo.com", false).isEmpty());
+    }
+
+    @Test
+    void fotoDeUsuarioSemFotoOuInexistenteVemVazia() {
+        cuidadora.setFoto(null);
+        when(usuarioRepository.findByIdAndExcluidoFalse(99L)).thenReturn(Optional.empty());
+
+        assertTrue(usuarioService.buscarFoto(2L, "admin@exemplo.com", true).isEmpty());
+        assertTrue(usuarioService.buscarFoto(99L, "admin@exemplo.com", true).isEmpty());
+    }
+
+    @Test
+    void urlDaFotoApontaParaORecursoDoProprioUsuario() {
+        assertEquals("/api/usuarios/2/foto?v=f.jpg", UsuarioService.urlFoto(2L, "f.jpg"));
+        assertEquals(null, UsuarioService.urlFoto(2L, null));
+    }
 }
