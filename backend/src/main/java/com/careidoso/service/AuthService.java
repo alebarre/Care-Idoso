@@ -53,7 +53,8 @@ public class AuthService {
                 "Bearer",
                 userDetails.getId(),
                 userDetails.getNome(),
-                userDetails.getPerfil().name()
+                userDetails.getPerfil().name(),
+                UsuarioService.urlFoto(usuario.getFoto())
         );
     }
 

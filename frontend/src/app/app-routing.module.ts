@@ -39,6 +39,11 @@ const routes: Routes = [
     loadChildren: () => import('./modules/pedidos/pedidos.module').then(m => m.PedidosModule)
   },
   {
+    path: 'perfil',
+    canActivate: [AuthGuard],
+    loadChildren: () => import('./modules/perfil/perfil.module').then(m => m.PerfilModule)
+  },
+  {
     path: 'usuarios',
     canActivate: [AuthGuard, AdminGuard],
     loadChildren: () => import('./modules/usuarios/usuarios.module').then(m => m.UsuariosModule)

@@ -10,6 +10,7 @@ export interface LoginResponse {
   usuarioId: number;
   nome: string;
   perfil: 'ADMIN' | 'CUIDADORA';
+  foto?: string | null;
 }
 
 export interface RefreshTokenResponse {

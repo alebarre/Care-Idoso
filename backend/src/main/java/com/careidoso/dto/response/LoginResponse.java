@@ -6,6 +6,7 @@ public record LoginResponse(
         String tipo,
         Long usuarioId,
         String nome,
-        String perfil
+        String perfil,
+        String foto
 ) {
 }

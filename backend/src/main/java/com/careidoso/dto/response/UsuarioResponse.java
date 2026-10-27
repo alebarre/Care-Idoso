@@ -5,6 +5,7 @@ public record UsuarioResponse(
         String nome,
         String email,
         String perfil,
-        Boolean ativo
+        Boolean ativo,
+        String foto
 ) {
 }

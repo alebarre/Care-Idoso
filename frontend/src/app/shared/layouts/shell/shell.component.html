@@ -18,10 +18,13 @@
     </nav>
 
     <div class="app-sidebar__footer" *ngIf="usuarioLogado$ | async as usuario">
-      <div class="app-sidebar__user">
-        <span class="app-sidebar__user-name">{{ usuario.nome }}</span>
-        <span class="app-sidebar__user-role">{{ usuario.perfil }}</span>
-      </div>
+      <a class="app-sidebar__user" routerLink="/perfil" aria-label="Abrir meu perfil">
+        <app-avatar [nome]="usuario.nome" [foto]="usuario.foto" [tamanho]="36"></app-avatar>
+        <span class="app-sidebar__user-info">
+          <span class="app-sidebar__user-name">{{ usuario.nome }}</span>
+          <span class="app-sidebar__user-role">{{ usuario.perfil }}</span>
+        </span>
+      </a>
       <button class="icon-button" (click)="logout()" aria-label="Sair">
         <fa-icon [icon]="['fas', 'sign-out-alt']"></fa-icon>
       </button>

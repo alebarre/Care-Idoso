@@ -21,9 +21,10 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { TextareaModule } from 'primeng/textarea';
 import { BadgeModule } from 'primeng/badge';
 import { MessageService } from 'primeng/api';
+import { AvatarComponent } from './components/avatar/avatar.component';
 
 @NgModule({
-  declarations: [],
+  declarations: [AvatarComponent],
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -64,7 +65,8 @@ import { MessageService } from 'primeng/api';
     SelectModule,
     DatePickerModule,
     TextareaModule,
-    BadgeModule
+    BadgeModule,
+    AvatarComponent
   ],
   providers: [MessageService]
 })

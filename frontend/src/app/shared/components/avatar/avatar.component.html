@@ -1,0 +1,4 @@
+<span class="avatar" [style.width.px]="tamanho" [style.height.px]="tamanho" [style.fontSize.px]="tamanho * 0.4">
+  <img *ngIf="fotoSrc; else inicialTpl" [src]="fotoSrc" alt="Foto de perfil" />
+  <ng-template #inicialTpl>{{ inicial }}</ng-template>
+</span>

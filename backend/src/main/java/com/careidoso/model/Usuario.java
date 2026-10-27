@@ -43,6 +43,9 @@ public class Usuario {
     @Column(nullable = false, length = 20)
     private Perfil perfil;
 
+    @Column(length = 100)
+    private String foto;
+
     @Column(nullable = false)
     @Builder.Default
     private Boolean ativo = true;

@@ -1,0 +1,43 @@
+.perfil {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.perfil__foto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.perfil__foto-botao {
+  width: auto;
+  cursor: pointer;
+}
+
+.perfil__foto-botao--desabilitado {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.perfil__dica {
+  color: var(--text-muted);
+}
+
+.perfil__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.perfil__secao {
+  margin-top: var(--space-md);
+}
+
+.perfil__erro {
+  color: #d32f2f;
+  font-size: var(--font-size-sm);
+}

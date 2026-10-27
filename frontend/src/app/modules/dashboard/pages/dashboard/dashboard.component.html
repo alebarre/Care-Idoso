@@ -4,6 +4,15 @@
       <h1 class="heading-md">Care Idoso</h1>
       <p class="body-sm">Bem-vindo de volta</p>
     </div>
+    <a
+      *ngIf="authService.usuarioLogado$ | async as usuario"
+      class="dashboard-user"
+      routerLink="/perfil"
+      aria-label="Abrir meu perfil"
+    >
+      <span class="dashboard-user__name">{{ usuario.nome }}</span>
+      <app-avatar [nome]="usuario.nome" [foto]="usuario.foto" [tamanho]="44"></app-avatar>
+    </a>
     <button class="icon-button" (click)="logout()" aria-label="Sair">
       <fa-icon [icon]="['fas', 'sign-out-alt']"></fa-icon>
     </button>

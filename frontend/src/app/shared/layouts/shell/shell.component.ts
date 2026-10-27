@@ -36,6 +36,11 @@ export class ShellComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // o token não traz a foto; busca nome/foto atuais ao abrir o app já logado
+    if (this.authService.estaLogado()) {
+      this.authService.carregarPerfil().subscribe({ error: () => { /* mantém dados do token */ } });
+    }
+
     this.isLoginPage = this.ehPaginaDeLogin(this.router.url);
 
     this.router.events
