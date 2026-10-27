@@ -12,4 +12,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByEmail(String email);
 
     boolean existsByEmail(String email);
+
+    /** Usado pelo {@code JwtFilter} para recusar tokens de usuários desativados. */
+    boolean existsByEmailAndAtivoTrue(String email);
 }

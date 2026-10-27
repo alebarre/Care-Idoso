@@ -79,7 +79,7 @@ public class RefreshTokenService {
      * Valida e consome o token (rotação) e emite outro.
      *
      * Falha com {@code BadCredentialsException} e mensagem única se o token não existe,
-     * já foi utilizado/revogado ou expirou. Não há detecção de reuso (token já usado
+     * já foi utilizado/revogado ou expirou, ou se o usuário foi desativado. Não há detecção de reuso (token já usado
      * apenas é recusado, sem revogar a família de tokens).
      */
     @Transactional
@@ -99,6 +99,10 @@ public class RefreshTokenService {
         refreshTokenRepository.save(refreshToken);
 
         Usuario usuario = refreshToken.getUsuario();
+        if (!Boolean.TRUE.equals(usuario.getAtivo())) {
+            log.warn("Tentativa de renovação de usuário inativo. usuarioId={}", usuario.getId());
+            throw new BadCredentialsException("Refresh token inválido ou expirado.");
+        }
         String novoRefreshToken = gerar(usuario);
 
         log.info("Refresh token renovado. usuarioId={}", usuario.getId());

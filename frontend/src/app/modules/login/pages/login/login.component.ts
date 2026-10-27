@@ -45,12 +45,16 @@ export class LoginComponent implements OnInit {
       next: () => {
         this.router.navigate(['/']);
       },
-      error: () => {
+      error: (err) => {
         this.carregando = false;
+        // 403 = credenciais corretas, mas conta inativa: o backend traz a mensagem específica
+        const detail = err?.status === 403 && err?.error?.mensagem
+          ? err.error.mensagem
+          : 'E-mail ou senha inválidos.';
         this.messageService.add({
           severity: 'error',
           summary: 'Erro',
-          detail: 'E-mail ou senha inválidos.'
+          detail
         });
       }
     });

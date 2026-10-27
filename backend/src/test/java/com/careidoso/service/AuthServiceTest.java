@@ -13,7 +13,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import com.careidoso.dto.request.LoginRequest;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
@@ -102,5 +105,31 @@ class AuthServiceTest {
 
         verify(codigoVerificacaoService).verificar("a@exemplo.com", "123456", TipoCodigoVerificacao.ESQUECI_SENHA);
         verify(codigoVerificacaoService, never()).validar(any(), any(), any());
+    }
+
+    @Test
+    void loginDeContaInativaComSenhaCorretaInformaContaInativa() {
+        when(authenticationManager.authenticate(any())).thenThrow(new DisabledException("User is disabled"));
+        Usuario inativo = Usuario.builder().email("i@exemplo.com").senha("hash").perfil(Perfil.CUIDADORA).ativo(false).build();
+        when(usuarioRepository.findByEmail("i@exemplo.com")).thenReturn(Optional.of(inativo));
+        when(passwordEncoder.matches("abc123", "hash")).thenReturn(true);
+
+        DisabledException ex = assertThrows(DisabledException.class,
+                () -> authService.login(new LoginRequest("i@exemplo.com", "abc123")));
+
+        assertEquals("Conta inativa. Procure o administrador.", ex.getMessage());
+    }
+
+    @Test
+    void loginDeContaInativaComSenhaErradaNaoRevelaQueAContaExiste() {
+        when(authenticationManager.authenticate(any())).thenThrow(new DisabledException("User is disabled"));
+        Usuario inativo = Usuario.builder().email("i@exemplo.com").senha("hash").perfil(Perfil.CUIDADORA).ativo(false).build();
+        when(usuarioRepository.findByEmail("i@exemplo.com")).thenReturn(Optional.of(inativo));
+        when(passwordEncoder.matches("errada1", "hash")).thenReturn(false);
+
+        BadCredentialsException ex = assertThrows(BadCredentialsException.class,
+                () -> authService.login(new LoginRequest("i@exemplo.com", "errada1")));
+
+        assertEquals("E-mail ou senha inválidos.", ex.getMessage());
     }
 }

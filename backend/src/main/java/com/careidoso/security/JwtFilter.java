@@ -1,5 +1,6 @@
 package com.careidoso.security;
 
+import com.careidoso.repository.UsuarioRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,10 +25,10 @@ import java.util.List;
  * devolve 401/403 é o {@code AuthenticationEntryPoint}/{@code AccessDeniedHandler}
  * configurados em {@code SecurityConfig}, conforme a regra do endpoint.
  *
- * Segurança: a autoridade ({@code ROLE_<perfil>}) vem apenas das claims assinadas
- * do token, sem consulta ao banco. Por isso um usuário desativado ou com perfil
- * alterado mantém o acesso até o access token expirar (por isso o access token é
- * curto e a renovação passa pelo refresh token, que é validado no banco).
+ * Segurança: a autoridade ({@code ROLE_<perfil>}) vem das claims assinadas do token,
+ * mas a conta precisa estar ativa no banco (uma consulta por requisição autenticada):
+ * um usuário desativado perde o acesso imediatamente, sem esperar o token expirar. Já
+ * uma mudança de perfil só vale no próximo token (o access token é curto).
  * Detalhes do erro vão ao log apenas como aviso, sem o token.
  */
 @Slf4j
@@ -36,6 +37,7 @@ import java.util.List;
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final UsuarioRepository usuarioRepository;
 
     /**
      * Extrai e valida o Bearer token e, se válido, popula o {@code SecurityContext}
@@ -58,7 +60,8 @@ public class JwtFilter extends OncePerRequestFilter {
                 if (email != null
                         && perfil != null
                         && SecurityContextHolder.getContext().getAuthentication() == null
-                        && !jwtService.tokenExpirado(token)) {
+                        && !jwtService.tokenExpirado(token)
+                        && usuarioRepository.existsByEmailAndAtivoTrue(email)) {
 
                     var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + perfil));
                     var auth = new UsernamePasswordAuthenticationToken(email, null, authorities);

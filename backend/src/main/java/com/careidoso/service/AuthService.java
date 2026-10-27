@@ -14,6 +14,7 @@ import com.careidoso.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -40,10 +41,13 @@ public class AuthService {
 
     /**
      * Valida as credenciais e emite access token (JWT) + refresh token (novo registro
-     * no banco). Conta inativa não autentica ({@code DisabledException} do provider),
-     * hoje sem handler específico (cai no 500 genérico).
+     * no banco). Conta inativa não autentica.
+     *
+     * Conta inativa só é informada a quem acertou a senha; com senha errada a resposta
+     * é a mesma de qualquer credencial inválida, para não revelar quais e-mails existem.
      *
      * @throws BadCredentialsException para qualquer falha de credencial, com mensagem única
+     * @throws DisabledException       se as credenciais estão corretas mas a conta está inativa
      */
     @Transactional
     public LoginResponse login(LoginRequest request) {
@@ -52,6 +56,14 @@ public class AuthService {
                     new UsernamePasswordAuthenticationToken(request.email(), request.senha())
             );
         } catch (BadCredentialsException e) {
+            throw new BadCredentialsException("E-mail ou senha inválidos.");
+        } catch (DisabledException e) {
+            boolean senhaCorreta = usuarioRepository.findByEmail(request.email())
+                    .map(u -> passwordEncoder.matches(request.senha(), u.getSenha()))
+                    .orElse(false);
+            if (senhaCorreta) {
+                throw new DisabledException("Conta inativa. Procure o administrador.");
+            }
             throw new BadCredentialsException("E-mail ou senha inválidos.");
         }
 
