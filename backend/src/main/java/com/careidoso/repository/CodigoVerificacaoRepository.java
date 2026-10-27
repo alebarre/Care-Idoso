@@ -42,9 +42,14 @@ public interface CodigoVerificacaoRepository extends JpaRepository<CodigoVerific
      * Busca o código exato ainda não usado. A expiração é verificada pelo service,
      * para devolver mensagem específica de "expirado".
      */
-    Optional<CodigoVerificacao> findByEmailAndTipoAndCodigoAndUtilizadoFalse(
+    /** Código pendente mais recente (mesmo expirado), usado na validação com contagem de tentativas. */
+    Optional<CodigoVerificacao> findTopByEmailAndTipoAndUtilizadoFalseOrderByCreatedAtDesc(
             String email,
-            TipoCodigoVerificacao tipo,
-            String codigo
+            TipoCodigoVerificacao tipo
     );
+
+    /** Incremento atômico, para que tentativas concorrentes não "percam" contagem. */
+    @Modifying
+    @Query("UPDATE CodigoVerificacao c SET c.tentativas = c.tentativas + 1 WHERE c.id = :id")
+    void incrementarTentativas(@Param("id") Long id);
 }

@@ -42,8 +42,8 @@ public class CodigoVerificacao {
      * Cinco dígitos numéricos, gravados em texto claro (vida útil de 1 minuto). Nunca logar.
      */
     @NotBlank(message = "O código é obrigatório.")
-    @Size(min = 5, max = 5, message = "O código deve ter {max} dígitos.")
-    @Column(nullable = false, length = 5)
+    @Size(min = 6, max = 6, message = "O código deve ter {max} dígitos.")
+    @Column(nullable = false, length = 6)
     private String codigo;
 
     /**
@@ -71,6 +71,11 @@ public class CodigoVerificacao {
     /**
      * Criação; base do cooldown de reenvio.
      */
+    /** Tentativas de validação com código errado; ao atingir o limite o código deixa de ser aceito. */
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer tentativas = 0;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

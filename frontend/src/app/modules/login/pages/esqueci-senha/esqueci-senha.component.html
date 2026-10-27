@@ -56,7 +56,7 @@
       class="auth-form"
     >
       <p class="body-md auth-instructions">
-        Digite o código de 5 dígitos enviado para
+        Digite o código de 6 dígitos enviado para
         <strong>{{ email }}</strong>.
       </p>
 
@@ -68,14 +68,14 @@
           class="uber-input uber-input--center"
           formControlName="codigo"
           placeholder="00000"
-          maxlength="5"
+          maxlength="6"
           inputmode="numeric"
         />
         <p class="erro-campo" *ngIf="codigoForm.get('codigo')?.hasError('required') && codigoForm.get('codigo')?.touched">
-          Digite o código de 5 dígitos.
+          Digite o código de 6 dígitos.
         </p>
         <p class="erro-campo" *ngIf="codigoForm.get('codigo')?.hasError('minlength') && codigoForm.get('codigo')?.touched">
-          O código deve ter 5 dígitos.
+          O código deve ter 6 dígitos.
         </p>
         <p class="erro-campo" *ngIf="codigoForm.get('codigo')?.hasError('pattern') && codigoForm.get('codigo')?.touched">
           O código deve conter apenas números.

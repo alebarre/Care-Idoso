@@ -17,7 +17,7 @@ export interface NovaContaRequest {
   senha: string;
 }
 
-/** Validação do código (5 dígitos) do cadastro. */
+/** Validação do código (6 dígitos) do cadastro. */
 export interface ValidarCodigoRequest {
   email: string;
   codigo: string;

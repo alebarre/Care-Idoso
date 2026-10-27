@@ -7,25 +7,27 @@ import com.careidoso.util.LogSanitizer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
-import java.util.Random;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
 
 /**
  * Gera, envia e valida códigos numéricos (OTP) de verificação por e-mail,
  * usados na recuperação de senha e na ativação de conta.
  *
- * Regras: código de 5 dígitos, validade de 1 minuto, uso único, e intervalo mínimo
- * de 60 segundos entre envios para o mesmo e-mail e tipo. Um novo envio invalida os
- * códigos pendentes anteriores.
+ * Regras: código de 6 dígitos gerado com {@code SecureRandom}, validade de 1 minuto,
+ * uso único, até {@value #MAX_TENTATIVAS} tentativas erradas por código e intervalo
+ * mínimo de 60 segundos entre envios para o mesmo e-mail e tipo. Um novo envio
+ * invalida os códigos pendentes anteriores.
  *
  * Segurança: o código e o e-mail em claro nunca vão ao log (e-mail é mascarado).
- * Pontos de atenção: não há limite de tentativas por código nem por IP, e 5 dígitos
- * somam apenas 100 mil combinações; o cooldown e a validade curta são hoje a
- * principal proteção contra força bruta.
+ * Limitação conhecida: o limite é por código/e-mail; não há rate limit por IP.
  */
 @Service
 @RequiredArgsConstructor
@@ -35,7 +37,10 @@ public class CodigoVerificacaoService {
     /**
      * Quantidade de dígitos do código; deve acompanhar as validações dos DTOs e a coluna do banco.
      */
-    private static final int TAMANHO_CODIGO = 5;
+    private static final int TAMANHO_CODIGO = 6;
+
+    /** Tentativas erradas toleradas por código; depois é preciso solicitar outro. */
+    static final int MAX_TENTATIVAS = 5;
     /**
      * Validade do código em minutos; o texto dos e-mails em {@code EmailService} cita esse valor.
      */
@@ -47,11 +52,8 @@ public class CodigoVerificacaoService {
 
     private final CodigoVerificacaoRepository codigoRepository;
     private final EmailService emailService;
-    /**
-     * Gerador dos dígitos do OTP. {@code java.util.Random} é previsível; para um
-     * código de segurança o ideal é {@code SecureRandom}.
-     */
-    private final Random random = new Random();
+    /** Gerador criptograficamente seguro: o OTP não pode ser previsível. */
+    private final SecureRandom random = new SecureRandom();
 
     /**
      * Gera um novo código, grava e envia por e-mail.
@@ -112,7 +114,7 @@ public class CodigoVerificacaoService {
      * @throws IllegalArgumentException se o formato for inválido, o código não existir /
      *         já tiver sido usado, ou estiver expirado (mensagens exibidas ao usuário)
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW, noRollbackFor = IllegalArgumentException.class)
     public void validar(String email, String codigoInformado, TipoCodigoVerificacao tipo) {
         CodigoVerificacao codigo = localizarValido(email, codigoInformado, tipo);
         codigo.setUtilizado(true);
@@ -127,11 +129,17 @@ public class CodigoVerificacaoService {
      *
      * @throws IllegalArgumentException nas mesmas condições de {@link #validar}
      */
-    @Transactional(readOnly = true)
+    @Transactional(propagation = Propagation.REQUIRES_NEW, noRollbackFor = IllegalArgumentException.class)
     public void verificar(String email, String codigoInformado, TipoCodigoVerificacao tipo) {
         localizarValido(email, codigoInformado, tipo);
     }
 
+    /**
+     * Localiza o código pendente do e-mail e confere o valor informado. Erros contam como
+     * tentativa; ao atingir {@link #MAX_TENTATIVAS} o código fica inutilizável (sem marcá-lo
+     * como usado, para que o cooldown de reenvio continue valendo). Roda em transação
+     * própria e sem rollback nas falhas de validação, senão o contador seria desfeito.
+     */
     private CodigoVerificacao localizarValido(String email, String codigoInformado, TipoCodigoVerificacao tipo) {
         Instant agora = Instant.now();
         String emailMascarado = LogSanitizer.mascararEmail(email);
@@ -142,15 +150,29 @@ public class CodigoVerificacaoService {
             throw new IllegalArgumentException("O código deve ter exatamente " + TAMANHO_CODIGO + " dígitos.");
         }
 
-        CodigoVerificacao codigo = codigoRepository.findByEmailAndTipoAndCodigoAndUtilizadoFalse(email, tipo, codigoInformado)
+        CodigoVerificacao codigo = codigoRepository.findTopByEmailAndTipoAndUtilizadoFalseOrderByCreatedAtDesc(email, tipo)
                 .orElseThrow(() -> {
                     log.warn("Código não encontrado ou já utilizado. email={}, tipo={}", emailMascarado, tipo);
                     return new IllegalArgumentException("Código inválido ou já utilizado.");
                 });
 
         if (!agora.isBefore(codigo.getExpiracao())) {
-            log.warn("Código expirado. email={}, tipo={}, expiracao={}, agora={}", emailMascarado, tipo, codigo.getExpiracao(), agora);
+            log.warn("Código expirado. email={}, tipo={}", emailMascarado, tipo);
             throw new IllegalArgumentException("Código expirado.");
+        }
+
+        if (codigo.getTentativas() >= MAX_TENTATIVAS) {
+            log.warn("Código bloqueado por excesso de tentativas. email={}, tipo={}", emailMascarado, tipo);
+            throw new IllegalArgumentException("Muitas tentativas. Solicite um novo código.");
+        }
+
+        boolean confere = MessageDigest.isEqual(
+                codigo.getCodigo().getBytes(StandardCharsets.UTF_8),
+                codigoInformado.getBytes(StandardCharsets.UTF_8));
+        if (!confere) {
+            codigoRepository.incrementarTentativas(codigo.getId());
+            log.warn("Código incorreto. email={}, tipo={}, tentativa={}", emailMascarado, tipo, codigo.getTentativas() + 1);
+            throw new IllegalArgumentException("Código inválido ou já utilizado.");
         }
         return codigo;
     }

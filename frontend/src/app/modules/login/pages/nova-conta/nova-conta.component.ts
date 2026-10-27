@@ -10,7 +10,7 @@ type EtapaNovaConta = 'dados' | 'codigo' | 'sucesso';
 
 /**
  * Cadastro público em duas fases: envia os dados (a API dispara o código por
- * e-mail) e valida o código de 5 dígitos. Contas criadas aqui são sempre
+ * e-mail) e valida o código de 6 dígitos. Contas criadas aqui são sempre
  * `CUIDADORA`: o request não carrega perfil e o backend define o papel.
  * O reenvio fica bloqueado por 60 s (`tempoRestante`).
  */
@@ -47,7 +47,7 @@ export class NovaContaComponent implements OnInit, OnDestroy {
     }, { validators: this.senhasIguais });
 
     this.codigoForm = this.fb.group({
-      codigo: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(5), Validators.pattern(/^\d{5}$/)]]
+      codigo: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(6), Validators.pattern(/^\d{6}$/)]]
     });
   }
 

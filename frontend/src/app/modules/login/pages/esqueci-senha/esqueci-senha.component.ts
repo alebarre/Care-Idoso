@@ -46,7 +46,7 @@ export class EsqueciSenhaComponent implements OnInit, OnDestroy {
     });
 
     this.codigoForm = this.fb.group({
-      codigo: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(5), Validators.pattern(/^\d{5}$/)]]
+      codigo: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(6), Validators.pattern(/^\d{6}$/)]]
     });
 
     this.senhaForm = this.fb.group({
