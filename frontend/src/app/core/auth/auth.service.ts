@@ -75,6 +75,10 @@ export class AuthService {
     return this.http.put<PerfilResponse>(this.usuariosUrl, request).pipe(
       tap(response => {
         localStorage.setItem(this.tokenKey, response.accessToken);
+        if (response.refreshToken) {
+          // trocar a senha revoga todos os refresh tokens; este mantém a sessão atual
+          localStorage.setItem(this.refreshTokenKey, response.refreshToken);
+        }
         this.atualizarUsuarioLogado(response.usuario);
       })
     );

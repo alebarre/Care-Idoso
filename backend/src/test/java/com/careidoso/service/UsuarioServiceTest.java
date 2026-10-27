@@ -1,5 +1,6 @@
 package com.careidoso.service;
 
+import com.careidoso.dto.request.AtualizarPerfilRequest;
 import com.careidoso.dto.request.AtualizarUsuarioRequest;
 import com.careidoso.model.Perfil;
 import com.careidoso.model.Usuario;
@@ -114,5 +115,33 @@ class UsuarioServiceTest {
 
         assertEquals(Perfil.ADMIN, cuidadora.getPerfil());
         verify(refreshTokenService).revogarTodosDoUsuario(2L);
+    }
+
+    @Test
+    void trocarSenhaRevogaSessoesEEmiteNovoRefreshToken() {
+        when(usuarioRepository.findByEmail("maria@exemplo.com")).thenReturn(Optional.of(cuidadora));
+        when(passwordEncoder.matches("atual1", "h")).thenReturn(true);
+        when(passwordEncoder.encode("nova123")).thenReturn("hash-novo");
+        when(jwtService.gerarAccessToken(any())).thenReturn("access");
+        when(refreshTokenService.gerar(cuidadora)).thenReturn("refresh-novo");
+
+        var resp = usuarioService.atualizarPerfil("maria@exemplo.com",
+                new AtualizarPerfilRequest(null, null, "atual1", "nova123"));
+
+        verify(refreshTokenService).revogarTodosDoUsuario(2L);
+        assertEquals("refresh-novo", resp.refreshToken());
+        assertEquals("hash-novo", cuidadora.getSenha());
+    }
+
+    @Test
+    void atualizarSemTrocarSenhaNaoMexeNosRefreshTokens() {
+        when(usuarioRepository.findByEmail("maria@exemplo.com")).thenReturn(Optional.of(cuidadora));
+        when(jwtService.gerarAccessToken(any())).thenReturn("access");
+
+        var resp = usuarioService.atualizarPerfil("maria@exemplo.com",
+                new AtualizarPerfilRequest("Maria Souza", null, null, null));
+
+        verify(refreshTokenService, never()).revogarTodosDoUsuario(any());
+        assertEquals(null, resp.refreshToken());
     }
 }

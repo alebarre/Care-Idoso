@@ -23,6 +23,8 @@ export interface AtualizarPerfilRequest {
 export interface PerfilResponse {
   usuario: Usuario;
   accessToken: string;
+  /** Presente só quando a senha foi trocada: os refresh tokens anteriores foram revogados. */
+  refreshToken?: string | null;
 }
 
 /** Criação de usuário por um ADMIN (`POST /api/usuarios`). */

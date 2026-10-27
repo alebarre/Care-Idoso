@@ -217,8 +217,10 @@ public class UsuarioService {
      * das claims (o token antigo ficaria com o subject desatualizado).
      *
      * Pendências conhecidas: a unicidade do e-mail é case-sensitive (endereços que
-     * diferem só em maiúsculas contam como distintos) e a troca de e-mail ou senha
-     * não revoga refresh tokens existentes.
+     * diferem só em maiúsculas contam como distintos).
+     *
+     * Trocar a senha revoga todos os refresh tokens do usuário (encerra as outras
+     * sessões) e emite um novo para a sessão atual, devolvido em {@code refreshToken}.
      *
      * @throws IllegalArgumentException e-mail já cadastrado ou senha atual incorreta
      */
@@ -238,7 +240,8 @@ public class UsuarioService {
             usuario.setEmail(request.email().trim());
         }
 
-        if (request.novaSenha() != null && !request.novaSenha().isBlank()) {
+        boolean senhaTrocada = request.novaSenha() != null && !request.novaSenha().isBlank();
+        if (senhaTrocada) {
             if (request.senhaAtual() == null
                     || !passwordEncoder.matches(request.senhaAtual(), usuario.getSenha())) {
                 throw new IllegalArgumentException("A senha atual está incorreta.");
@@ -250,7 +253,12 @@ public class UsuarioService {
         log.info("Perfil atualizado para usuário {}", LogSanitizer.mascararEmail(usuario.getEmail()));
 
         String novoToken = jwtService.gerarAccessToken(new UserDetailsImpl(usuario));
-        return new PerfilResponse(toResponse(usuario), novoToken);
+        String novoRefreshToken = null;
+        if (senhaTrocada) {
+            refreshTokenService.revogarTodosDoUsuario(usuario.getId());
+            novoRefreshToken = refreshTokenService.gerar(usuario);
+        }
+        return new PerfilResponse(toResponse(usuario), novoToken, novoRefreshToken);
     }
 
     /**
