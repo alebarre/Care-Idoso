@@ -143,9 +143,9 @@ public class AuthService {
      * inativo para o mesmo e-mail) e envia o código {@code NOVA_CONTA}. A conta só
      * passa a autenticar após {@link #ativarNovaConta}.
      *
-     * Erro se já existe conta ATIVA com o e-mail. Perfil omitido vira CUIDADORA.
-     * Segurança: este endpoint é público e aceita {@code perfil}; é preciso restringir
-     * a CUIDADORA no cadastro público para impedir autoelevação a ADMIN.
+     * Erro se já existe conta ATIVA com o e-mail. O perfil é sempre CUIDADORA e nunca
+     * é alterado ao reaproveitar um cadastro inativo: o endpoint é público e aceitar o
+     * perfil do cliente permitiria autoelevação a ADMIN.
      */
     @Transactional
     public void solicitarNovaConta(NovaContaRequest request) {
@@ -157,12 +157,11 @@ public class AuthService {
 
         Usuario usuario = usuarioRepository.findByEmail(request.email())
                 .orElseGet(() -> {
-                    Perfil perfil = request.perfil() != null ? request.perfil() : Perfil.CUIDADORA;
                     Usuario novo = Usuario.builder()
                             .nome(request.nome())
                             .email(request.email())
                             .senha(passwordEncoder.encode(request.senha()))
-                            .perfil(perfil)
+                            .perfil(Perfil.CUIDADORA)
                             .ativo(false)
                             .build();
                     return usuarioRepository.save(novo);
@@ -171,9 +170,6 @@ public class AuthService {
         if (!Boolean.TRUE.equals(usuario.getAtivo())) {
             usuario.setNome(request.nome());
             usuario.setSenha(passwordEncoder.encode(request.senha()));
-            if (request.perfil() != null) {
-                usuario.setPerfil(request.perfil());
-            }
             usuarioRepository.save(usuario);
         }
 

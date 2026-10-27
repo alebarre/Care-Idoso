@@ -15,7 +15,6 @@ export interface NovaContaRequest {
   nome: string;
   email: string;
   senha: string;
-  perfil?: 'ADMIN' | 'CUIDADORA';
 }
 
 /** Validação do código (5 dígitos) do cadastro. */

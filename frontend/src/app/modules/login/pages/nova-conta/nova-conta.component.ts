@@ -11,7 +11,7 @@ type EtapaNovaConta = 'dados' | 'codigo' | 'sucesso';
 /**
  * Cadastro público em duas fases: envia os dados (a API dispara o código por
  * e-mail) e valida o código de 5 dígitos. Contas criadas aqui são sempre
- * `CUIDADORA` (perfil fixo no request).
+ * `CUIDADORA`: o request não carrega perfil e o backend define o papel.
  * O reenvio fica bloqueado por 60 s (`tempoRestante`).
  */
 @Component({
@@ -73,8 +73,7 @@ export class NovaContaComponent implements OnInit, OnDestroy {
     const request = {
       nome: this.form.value.nome,
       email: this.form.value.email,
-      senha: this.form.value.senha,
-      perfil: 'CUIDADORA' as const
+      senha: this.form.value.senha
     };
 
     this.authService.novaConta(request).pipe(
@@ -130,8 +129,7 @@ export class NovaContaComponent implements OnInit, OnDestroy {
     const request = {
       nome: this.form.value.nome,
       email: this.form.value.email,
-      senha: this.form.value.senha,
-      perfil: 'CUIDADORA' as const
+      senha: this.form.value.senha
     };
 
     this.authService.novaConta(request).pipe(
