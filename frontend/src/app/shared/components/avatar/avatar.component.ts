@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, OnDestroy } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, OnChanges, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
 
@@ -9,6 +9,10 @@ import { Subscription } from 'rxjs';
  * Inputs: `nome` (fonte da inicial), `foto` (URL da API) e `tamanho` em px.
  * A imagem vira um object URL (blob) que é revogado ao trocar/destruir,
  * evitando vazamento de memória.
+ *
+ * O app roda sem zone.js: a resposta HTTP assíncrona não dispara detecção de
+ * mudanças sozinha, por isso `markForCheck()` é chamado ao atualizar `fotoSrc`
+ * (sem isso a foto só aparecia quando outro evento forçava um ciclo).
  */
 @Component({
   selector: 'app-avatar',
@@ -26,7 +30,7 @@ export class AvatarComponent implements OnChanges, OnDestroy {
 
   private requisicao?: Subscription;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private cdr: ChangeDetectorRef) { }
 
   get inicial(): string {
     return (this.nome ?? '').trim().charAt(0).toUpperCase() || '?';
@@ -43,8 +47,12 @@ export class AvatarComponent implements OnChanges, OnDestroy {
       next: blob => {
         this.liberarFoto();
         this.fotoSrc = URL.createObjectURL(blob);
+        this.cdr.markForCheck();
       },
-      error: () => this.liberarFoto()
+      error: () => {
+        this.liberarFoto();
+        this.cdr.markForCheck();
+      }
     });
   }
 
